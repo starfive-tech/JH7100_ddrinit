@@ -1,0 +1,116 @@
+// void inline apb_write(volatile void __iomem *addr, uint32_t data);
+// void inline orbit_readl_poll(volatile void __iomem *addr, uint32_t expected, uint32_t strobe);
+// void orbit_nsleep(int ns); // Sleep ns nano-seconds
+// void orbit_usleep(int us); // Sleep us micro-seconds
+apb_write(OMC_APB_BASE_ADDR + 32'h0, 32'h00000401);
+apb_write(OMC_SECURE_APB_BASE_ADDR + 32'hf00, 32'h40001030);
+apb_write(OMC_SECURE_APB_BASE_ADDR + 32'hf04, 32'h00000001);
+apb_write(OMC_SECURE_APB_BASE_ADDR + 32'hf10, 32'h00000000);
+apb_write(OMC_SECURE_APB_BASE_ADDR + 32'hf14, 32'h01ffffff);
+apb_write(OMC_SECURE_APB_BASE_ADDR + 32'hf18, 32'h00000001);
+apb_write(OMC_SECURE_APB_BASE_ADDR + 32'hf30, 32'h0f000031);//bit8 what mean?
+apb_write(OMC_SECURE_APB_BASE_ADDR + 32'hf34, 32'h0f000031);//bit8 what mean?
+apb_write(OMC_SECURE_APB_BASE_ADDR + 32'h110, 32'hc0000000);
+apb_write(OMC_SECURE_APB_BASE_ADDR + 32'h114, 32'hffffffff);
+apb_write(OMC_APB_BASE_ADDR + 32'h10c, 32'h00000505);
+apb_write(OMC_APB_BASE_ADDR + 32'h11c, 32'h00000000);
+apb_write(OMC_APB_BASE_ADDR + 32'h500, 32'h00000201);
+apb_write(OMC_APB_BASE_ADDR + 32'h504, 32'h40000000);
+
+apb_read(OMC_APB_BASE_ADDR + 32'h504, tmp);
+while((tmp& 32'h80000000) != 32'h80000000) begin
+  udelay(1);
+  apb_read(OMC_APB_BASE_ADDR + 32'h504, tmp);
+end
+
+apb_write(OMC_APB_BASE_ADDR + 32'h504, 32'h00000000);
+apb_write(OMC_APB_BASE_ADDR + 32'h310, 32'h02000000);//dfs_dfi_frequency?
+apb_write(OMC_APB_BASE_ADDR + 32'h50c, 32'h00000000);
+// Waits tINIT1 (200 us): Minimum RESET_n LOW time after completion of voltage ramp
+orbit_usleep(2);//orbit_usleep(200);
+apb_write(OMC_APB_BASE_ADDR + 32'h50c, 32'h00000001);
+// Waits tINIT3 (2 ms): Minimum CKE low time after RESET_n high
+orbit_usleep(2);//orbit_usleep(2000);
+apb_write(OMC_APB_BASE_ADDR + 32'h10, 32'h0000003c);
+apb_write(OMC_APB_BASE_ADDR + 32'h14, 32'h00000001);
+// Waits tINIT5 (2 us): Minimum idle time before first MRW/MRR command
+orbit_usleep(2);
+apb_write(OMC_APB_BASE_ADDR + 32'h10, 32'h00000010);
+apb_write(OMC_APB_BASE_ADDR + 32'h14, 32'h00000001);
+// Waits tZQCAL (1 us)
+orbit_usleep(1);
+apb_write(OMC_APB_BASE_ADDR + 32'h10, 32'h00000011);
+apb_write(OMC_APB_BASE_ADDR + 32'h14, 32'h00000001);
+apb_write(OMC_APB_BASE_ADDR + 32'h10, 32'h00000020);
+apb_write(OMC_APB_BASE_ADDR + 32'h14, 32'h00000001);
+// Waits tZQCAL (1 us)
+orbit_usleep(1);
+apb_write(OMC_APB_BASE_ADDR + 32'h10, 32'h00000021);
+apb_write(OMC_APB_BASE_ADDR + 32'h14, 32'h00000001);
+apb_write(OMC_APB_BASE_ADDR + 32'h310, 32'h02000000);//dfs_dfi_frequency?
+// Write down RCLK-related CRs
+apb_write(OMC_APB_BASE_ADDR + 32'h600, 32'h002e0176);
+apb_write(OMC_APB_BASE_ADDR + 32'h604, 32'h002e0176);
+apb_write(OMC_APB_BASE_ADDR + 32'h608, 32'h001700bb);
+apb_write(OMC_APB_BASE_ADDR + 32'h60c, 32'h000b005d);
+apb_write(OMC_APB_BASE_ADDR + 32'h610, 32'h0005002e);
+apb_write(OMC_APB_BASE_ADDR + 32'h614, 32'h00020017);
+apb_write(OMC_APB_BASE_ADDR + 32'h618, 32'h00020017);
+apb_write(OMC_APB_BASE_ADDR + 32'h61c, 32'h00020017);
+apb_write(OMC_APB_BASE_ADDR + 32'h678, 32'h00000019);
+apb_write(OMC_APB_BASE_ADDR + 32'h100, 32'h000000e0);
+apb_write(OMC_APB_BASE_ADDR + 32'h620, 32'h04031d22);
+apb_write(OMC_APB_BASE_ADDR + 32'h624, 32'h0c18080c);
+apb_write(OMC_APB_BASE_ADDR + 32'h628, 32'h60440c9d);//tRC,tRAS
+apb_write(OMC_APB_BASE_ADDR + 32'h62c, 32'h34271040);//tRRD_s=4'h9, tFAW=7'h30, need refer to actual sdram features
+apb_write(OMC_APB_BASE_ADDR + 32'h630, 32'h36231c0e);
+apb_write(OMC_APB_BASE_ADDR + 32'h634, 32'h001e0000);
+apb_write(OMC_APB_BASE_ADDR + 32'h638, 32'h20171708);
+apb_write(OMC_APB_BASE_ADDR + 32'h63c, 32'h36420804);
+apb_write(OMC_APB_BASE_ADDR + 32'h640, 32'h01cf2cd6);//tXSR>=0x1CC(287.5ns_8gibx16);tXP+tmrri?
+apb_write(OMC_APB_BASE_ADDR + 32'h644, 32'h00e001c0);//tRFC>=0x230(350ns_8gib)
+apb_write(OMC_APB_BASE_ADDR + 32'h648, 32'h00000000);//tXSDLL,tXSfast>=0x110(170ns_8gib)
+apb_write(OMC_APB_BASE_ADDR + 32'h64c, 32'h000c351e);
+apb_write(OMC_APB_BASE_ADDR + 32'h650, 32'h20664713);
+apb_write(OMC_APB_BASE_ADDR + 32'h654, 32'h00002520);
+apb_write(OMC_APB_BASE_ADDR + 32'h658, 32'h00000060);
+apb_write(OMC_APB_BASE_ADDR + 32'h65c, 32'h00900030);
+apb_write(OMC_APB_BASE_ADDR + 32'h660, 32'h00000000);
+apb_write(OMC_APB_BASE_ADDR + 32'h680, 32'h16000416);//DFI Tphy_rdcslat,Tphy_rdlat,Trddata_en
+apb_write(OMC_APB_BASE_ADDR + 32'h684, 32'h0a000a04);//DFI Tphy_wrcslat,Tphy_wrlat,Tphy_wrdata
+apb_write(OMC_APB_BASE_ADDR + 32'h688, 32'h12150404);//DFI Tctrl_delay,Twrdata_delay,Tdram_clk_disable,Tdram_clk_enable
+apb_write(OMC_APB_BASE_ADDR + 32'h68c, 32'h20003320);//DFI Trdlvl_en,Trdlvl_rr,Twrlvl_en
+apb_write(OMC_APB_BASE_ADDR + 32'h690, 32'h00140000);
+apb_write(OMC_APB_BASE_ADDR + 32'h69c, 32'h01240074);
+apb_write(OMC_APB_BASE_ADDR + 32'h6a0, 32'h03e80000);
+apb_write(OMC_APB_BASE_ADDR + 32'h6a4, 32'h20330c00);//DFI Twdqlvl_en,Twdqlvl_rw
+apb_write(OMC_APB_BASE_ADDR + 32'h6a8, 32'h00040000);
+apb_write(OMC_APB_BASE_ADDR + 32'h4, 32'h30010056);
+apb_write(OMC_APB_BASE_ADDR + 32'hc, 32'h00000002);
+apb_write(OMC_APB_BASE_ADDR + 32'h4, 32'h3002002d);
+apb_write(OMC_APB_BASE_ADDR + 32'hc, 32'h00000002);
+apb_write(OMC_APB_BASE_ADDR + 32'h4, 32'h30030031);
+apb_write(OMC_APB_BASE_ADDR + 32'hc, 32'h00000002);
+apb_write(OMC_APB_BASE_ADDR + 32'h4, 32'h300c004d);
+apb_write(OMC_APB_BASE_ADDR + 32'hc, 32'h00000002);
+ndelay(250);
+apb_write(OMC_APB_BASE_ADDR + 32'h4, 32'h300e004d);
+apb_write(OMC_APB_BASE_ADDR + 32'hc, 32'h00000002);
+ndelay(250);
+apb_write(OMC_APB_BASE_ADDR + 32'h4, 32'h30160006);
+apb_write(OMC_APB_BASE_ADDR + 32'hc, 32'h00000002);
+apb_write(OMC_APB_BASE_ADDR + 32'h410, 32'h00101010);
+apb_write(OMC_APB_BASE_ADDR + 32'h420, 32'h0c181006);
+apb_write(OMC_APB_BASE_ADDR + 32'h424, 32'h20200820);
+apb_write(OMC_APB_BASE_ADDR + 32'h428, 32'h80000020);
+apb_write(OMC_APB_BASE_ADDR + 32'h0, 32'h00000001);
+apb_write(OMC_APB_BASE_ADDR + 32'h108, 32'h00003000);
+apb_write(OMC_APB_BASE_ADDR + 32'h320, 32'h00000000);//dramclk_gate_enable
+apb_write(OMC_APB_BASE_ADDR + 32'h508, 32'h00000033);
+apb_write(OMC_APB_BASE_ADDR + 32'h324, 32'h8000a000);
+apb_write(OMC_APB_BASE_ADDR + 32'h104, 32'h90000000);
+apb_write(OMC_APB_BASE_ADDR + 32'h510, 32'h00000000);//PHYUPD_CTRL
+apb_write(OMC_APB_BASE_ADDR + 32'h514, 32'h00000000);//PHYUPD_CTRL2
+apb_write(OMC_SECURE_APB_BASE_ADDR + 32'h700, 32'h00000003);
+apb_write(OMC_APB_BASE_ADDR + 32'h20, 32'h00000001);
+// Initialization done

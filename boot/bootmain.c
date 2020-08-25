@@ -32,7 +32,7 @@ extern void boot_sdio_init(void);
 extern int boot_load_gpt_partition(void* dst, const gpt_guid* partition_type_guid);
 extern const gpt_guid gpt_guid_sifive_uboot;
 extern const gpt_guid gpt_guid_sifive_kernel;
-
+extern unsigned int receive_count;
 
 
 typedef void ( *STARTRUNNING )( unsigned int par1 );
@@ -107,10 +107,163 @@ static int load_data(struct spi_flash* spi_flash,unsigned int des_addr,unsigned 
 	return 0;
 }
 
+int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,unsigned char mode)
+{
+    int ret = 0;
+    u32 offset = 0;
+    int erase_block = 0;
+    unsigned int receive_count_align = 0;
+    unsigned int index = 0;
+	unsigned int blockSize,pageSize;
+	u8 *data;
+
+    printk("send a file by xmodem\r\n");
+    receive_count = 0;
+    ret = xmodem_recv_file((unsigned char *)DEFAULT_BOOT_LOAD_ADDR, 0);
+    if(ret == 0)
+        return;
+	
+	blockSize = spi_flash->block_size;
+	pageSize = spi_flash->page_size;
+	
+    if(receive_count % 2)
+	{
+		receive_count_align = receive_count + 1;//page align
+	}
+	else
+	{
+		receive_count_align = receive_count;
+	}
+
+	if((receive_count_align * 128) % (64 * 1024))
+	{
+		erase_block = (receive_count_align * 128) / (64 * 1024) + 1;
+	}
+	else
+	{
+		erase_block = (receive_count_align * 128) / (64 * 1024);
+	}
+
+	/*erase flash*/
+	offset = flash_addr;
+	for(index=0; index<erase_block; index++)
+	{
+		ret = spi_flash->erase(spi_flash, offset, blockSize, 64);
+		if(ret < 0)
+		{
+			printk("erases block %d fail\r\n",offset);
+	        return -1;
+		}
+		offset +=blockSize;
+	}
+
+	/*write data*/
+	offset = flash_addr;
+	data = (u8 *)DEFAULT_BOOT_LOAD_ADDR;
+	for(index=0; index<receive_count_align / 2; index++)
+	{
+		ret = spi_flash->write(spi_flash, offset,pageSize, data, mode);
+		if(ret < 0)
+		{
+			printk("write page %d fail\r\n",offset);
+	        return -1;
+		}
+		offset +=pageSize;
+		data += pageSize;
+	}
+
+	return 0;
+}
+
+static int updata_flash_code(struct spi_flash* spi_flash,unsigned int updata_num,unsigned char mode)
+{
+    int ret = 0;
+    switch (updata_num){
+        case 0:
+            ret = updata_flash(spi_flash,FLASH_SECONDBOOT_START_ADDR,mode);
+            break;
+        case 1:
+            ret = updata_flash(spi_flash,FLASH_DDRINIT_START_ADDR,mode);
+            break;
+        case 2:
+            ret = updata_flash(spi_flash,FLASH_UBOOT_START_ADDR,mode);
+            break;
+        default:
+            break;
+    }
+    return ret;
+}
+
+void boot_from_chiplink(void)
+{
+	int bootdelay = 3;
+	int abort = 0;
+	char str[3]={0};
+	int ret=0;
+	s32 usel;
+	unsigned long ts;
+	struct spi_flash* spi_flash;
+	unsigned char mode = 1;// or 4
+
+	while ((bootdelay > 0) && (!abort)) {
+		--bootdelay;
+		/* delay 1000 ms */
+		ts = get_timer(0);
+		do {
+			if (serial_tstc()) {	/* we got a key press	*/
+				abort  = 1; /* don't auto boot	*/
+				bootdelay = 0;	/* no more delay	*/
+
+				serial_getc();	/* consume input	*/
+				break;
+			}
+			mdelay(100);
+		} while (!abort && get_timer(ts) < 1000);
+
+		printk("\b\b\b%d ", bootdelay);
+	}
+	
+	if(1 == abort)
+	{
+		cadence_qspi_init(0, mode);
+		spi_flash = spi_flash_probe(0, 0, 50000000, 0, (u32)SPI_DATAMODE_8);
+		
+		printk("***************************************************\r\n");
+		printk("***************VIC	DDR INIT BOOT ********************\r\n");
+		printk("***************************************************\r\n");	
+again:
+		printk("0:updata second boot\r\n");  
+		printk("1:updata init ddr boot\r\n"); 
+		printk("2:updata uboot\r\n"); 
+		printk("3:quit\r\n");
+		printk("Select the function to test : ");
+		serial_gets(str);
+
+		if(str[0] == 0)
+			goto again;
+
+		usel = atoi(str);
+		if(usel >= 3)
+		{
+			printk("error select,try again\r\n");
+			goto again;
+		}
+		if(usel==3)
+			return;
+		
+		ret = updata_flash_code(spi_flash,usel,mode);
+		if(ret < 0)
+			printk("updata fail\r\n");
+		else
+			printk("updata success\r\n");
+
+		goto again;
+	}
+}
 
 void boot_from_uart(void)
 {
-    sys_cmd_proc();
+	sys_cmd_proc();
 }
 
 void boot_from_sdio(void)
@@ -327,6 +480,7 @@ void BootMain(void)
 	else
 		printk("End init lpddr4, test ddr fail\r\n");
 
+	boot_from_chiplink();
 	
 	boot_mode = get_boot_mode();
 //	boot_mode = 1;
@@ -343,8 +497,8 @@ void BootMain(void)
 	 	case 4:
 		 	boot_from_uart();
 		 	break;
-	 	case 7:
-		// boot_from_spi2ahb();
+	 	case 6:
+		 	boot_from_chiplink();
 		 	break;
 
 	 	default:

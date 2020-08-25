@@ -33,6 +33,7 @@ History:
 #define	RETRY_TIMES			0x400
 
 #define		XMODEM_BUFFER				0x18016000
+unsigned int receive_count = 0;
 
 
 //: 0719 del
@@ -129,7 +130,8 @@ UINT32 xmodem_recv_file(UINT8 *start_addr, UINT32 len)
 				if(ret == 1)
 				{
 					sys_memcpy(t_ptr, (s_ptr+1+2), DATA_BUFFER_SIZE_128);	// copy data to memory
-					t_ptr += DATA_BUFFER_SIZE_128;										// update the memory point
+					t_ptr += DATA_BUFFER_SIZE_128;					// update the memory point
+					receive_count++;
 				}
 				break;
 			case XMODEM_EOT:

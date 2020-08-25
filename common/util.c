@@ -1,11 +1,8 @@
 
 #include "util.h"
 #include "comdef.h"
-//#include "stdio.h"
+#include "ctype.h"
 #include "encoding.h"
-
-//unsigned int funcpll_432 = 0;
-//unsigned int osc_clk = 0;
 
 /*===========================================================================
 FUNCTION:  sys_memcpy
@@ -22,7 +19,6 @@ OUTPUT PARAMETER:
 
 RETURN VALUE:
 ===========================================================================*/
-extern unsigned int test_flag;
 void * sys_memcpy(void *p_des,const void * p_src,unsigned long size)
 {
 	char *tmp = p_des;
@@ -118,4 +114,36 @@ void sys_memset32(void *p_des,int c,unsigned long size)
 	for(i=0; i< size; i++)
 		((unsigned long*)p_des)[i] = c;
 }
+
+int atoi(const char *nptr)
+{
+	int c;              /* current char */
+	int total;         /* current total */
+	int sign;           /* if '-', then negative, otherwise positive */
+
+
+	/* skip whitespace */
+	while ( isspace((int)(unsigned char)*nptr) )
+		++nptr;
+
+
+	c = (int)(unsigned char)*nptr++;
+	sign = c;           /* save sign indication */
+	if (c == '-' || c == '+')
+		c = (int)(unsigned char)*nptr++;    /* skip sign */
+
+
+	total = 0;
+	while (isdigit(c)) {
+		total = 10 * total + (c - '0');     /* accumulate digit */
+		c = (int)(unsigned char)*nptr++;    /* get next char */
+	}
+
+
+	if (sign == '-')
+		return -total;
+	else
+		return total;   /* return result, negated if necessary */
+}
+
 

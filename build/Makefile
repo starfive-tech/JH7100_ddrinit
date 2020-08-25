@@ -49,6 +49,7 @@ OBJECTLIST=../boot/start.o \
 		../uart/cmd.o \
 		../uart/xmodem.o \
 		../common/util.o \
+		../common/ctype.o \
 		../gpio/gpio.o \
 		../spi/spi.o \
 		../spi/spi_probe.o \
@@ -65,7 +66,7 @@ OBJECTLIST=../boot/start.o \
 		../ddrphy_cfg/regconfig.h.sim_PHY.o \
 		../ddrphy_cfg/regconfig.h.sim_PI.o \
 		../ddrphy_cfg/lpddr4_1600_cl28_bl16/regconfig_pi_start.o \
-		../ddrc_cfg/lpddr4_1066_cl20_bl16/orbit_boot_1066.o
+		../ddrc_cfg/lpddr4_1066_cl20_bl16/orbit_boot_1066.o 
 		
 ifeq ($(DDR_SPEED), 1)
 OBJECTLIST +=../ddrc_cfg/orbit_boot_800.o
@@ -114,4 +115,4 @@ endif
 	
 .PHONY: clean
 clean:
-	rm -f ../*/*.o $(TARGET).bin *.asm
+	rm -f $(OBJECTLIST) $(TARGET).bin *.asm

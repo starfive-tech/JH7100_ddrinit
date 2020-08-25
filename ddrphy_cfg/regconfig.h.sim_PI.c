@@ -5,7 +5,6 @@
 #include <comdef.h>
 void regconfig_h_sim_pi(uint32_t OMC_APB_BASE_ADDR, uint32_t OMC_SECURE_APB_BASE_ADDR, uint32_t PHY_APB_BASE_ADDR)
 {
-    u32 tmp = 0;
     apb_write(PHY_APB_BASE_ADDR + (2048 +00 << 2), DENALI_PI_00_DATA);
     apb_write(PHY_APB_BASE_ADDR + (2048 +01 << 2), DENALI_PI_01_DATA);
     apb_write(PHY_APB_BASE_ADDR + (2048 +02 << 2), DENALI_PI_02_DATA);

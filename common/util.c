@@ -1,7 +1,6 @@
-
+#include "ctype.h"
 #include "util.h"
 #include "comdef.h"
-#include "ctype.h"
 #include "encoding.h"
 
 /*===========================================================================
@@ -121,7 +120,6 @@ int atoi(const char *nptr)
 	int total;         /* current total */
 	int sign;           /* if '-', then negative, otherwise positive */
 
-
 	/* skip whitespace */
 	while ( isspace((int)(unsigned char)*nptr) )
 		++nptr;
@@ -138,7 +136,6 @@ int atoi(const char *nptr)
 		total = 10 * total + (c - '0');     /* accumulate digit */
 		c = (int)(unsigned char)*nptr++;    /* get next char */
 	}
-
 
 	if (sign == '-')
 		return -total;

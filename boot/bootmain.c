@@ -91,7 +91,6 @@ static int load_data(struct spi_flash* spi_flash,unsigned int des_addr,unsigned 
 
 	offset += pageSize;
 	addr += SPIBOOT_LOAD_ADDR_OFFSET;
-	
 	/*read Remaining pages data*/
 	for(i=1; i<=endPage; i++)
 	{ 		
@@ -101,13 +100,14 @@ static int load_data(struct spi_flash* spi_flash,unsigned int des_addr,unsigned 
             printk("read fail##\r\n");
 			return -1;
         }
+	
 		offset += pageSize;
 		addr +=pageSize;
 	}
 	return 0;
 }
 
-int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,unsigned char mode)
+int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,u32 load_addr,unsigned char mode)
 {
     int ret = 0;
     u32 offset = 0;
@@ -117,9 +117,9 @@ int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,unsigned char mode)
 	unsigned int blockSize,pageSize;
 	u8 *data;
 
-    printk("send a file by xmodem\r\n");
+    printk("send file by xmodem\r\n");
     receive_count = 0;
-    ret = xmodem_recv_file((unsigned char *)DEFAULT_BOOT_LOAD_ADDR, 0);
+    ret = xmodem_recv_file((unsigned char *)load_addr, 0);
     if(ret == 0)
         return;
 	
@@ -159,10 +159,15 @@ int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,unsigned char mode)
 
 	/*write data*/
 	offset = flash_addr;
-	data = (u8 *)DEFAULT_BOOT_LOAD_ADDR;
+	data = (u8 *)load_addr;
 	for(index=0; index<receive_count_align / 2; index++)
 	{
 		ret = spi_flash->write(spi_flash, offset,pageSize, data, mode);
+		
+		printk(".");
+		if(index%64 == 0)
+			printk("\n");
+		
 		if(ret < 0)
 		{
 			printk("write page %d fail\r\n",offset);
@@ -180,13 +185,13 @@ static int updata_flash_code(struct spi_flash* spi_flash,unsigned int updata_num
     int ret = 0;
     switch (updata_num){
         case 0:
-            ret = updata_flash(spi_flash,FLASH_SECONDBOOT_START_ADDR,mode);
+            ret = updata_flash(spi_flash,FLASH_SECONDBOOT_START_ADDR,DEFAULT_SECONDBOOT_LOAD_ADDR,mode);
             break;
         case 1:
-            ret = updata_flash(spi_flash,FLASH_DDRINIT_START_ADDR,mode);
+            ret = updata_flash(spi_flash,FLASH_DDRINIT_START_ADDR,DEFAULT_DDRINIT_LOAD_ADDR,mode);
             break;
         case 2:
-            ret = updata_flash(spi_flash,FLASH_UBOOT_START_ADDR,mode);
+            ret = updata_flash(spi_flash,FLASH_UBOOT_START_ADDR,DEFAULT_UBOOT_LOAD_ADDR,mode);
             break;
         default:
             break;
@@ -198,7 +203,8 @@ void boot_from_chiplink(void)
 {
 	int bootdelay = 3;
 	int abort = 0;
-	char str[3]={0};
+	char str[6];
+	char *tmp;
 	int ret=0;
 	s32 usel;
 	unsigned long ts;
@@ -232,25 +238,31 @@ void boot_from_chiplink(void)
 		printk("***************VIC	DDR INIT BOOT ********************\r\n");
 		printk("***************************************************\r\n");	
 again:
+		tmp = str;
 		printk("0:updata second boot\r\n");  
-		printk("1:updata init ddr boot\r\n"); 
+		printk("1:updata ddr init boot\r\n"); 
 		printk("2:updata uboot\r\n"); 
 		printk("3:quit\r\n");
 		printk("Select the function to test : ");
 		serial_gets(str);
-
+		
 		if(str[0] == 0)
 			goto again;
 
-		usel = atoi(str);
-		if(usel >= 3)
+		while(*tmp == 4){tmp++;} /*skip EOT*/
+		
+		usel = atoi(tmp);
+		if(usel > 3)
 		{
 			printk("error select,try again\r\n");
 			goto again;
 		}
-		if(usel==3)
+
+		/*quit*/
+		if(usel == 3)
 			return;
-		
+
+		printk("usel:%d\n",usel);
 		ret = updata_flash_code(spi_flash,usel,mode);
 		if(ret < 0)
 			printk("updata fail\r\n");
@@ -290,11 +302,6 @@ void boot_from_spi(int mode)
 
 	/*load uboot*/
 	load_data(spi_flash,DEFAULT_UBOOT_ADDR,DEFAULT_UBOOT_OFFSET,mode);
-}
-
-void second_hart()
-{
-	printk("second hart\n");
 }
 
 static int init_ddr(void)
@@ -444,19 +451,9 @@ static int init_ddr(void)
 				count++;								
 				printk("ddr 0x%x, %dM test\r\n",(i * 4), count);						
 			}
-
-           // printf("i %d\r\n",i);
         }
     }
  #endif
-}
-
-static void chip_clk_init() 
-{
-	_SWITCH_CLOCK_clk_cpundbus_root_SOURCE_clk_pll0_out_;
-	_SWITCH_CLOCK_clk_dla_root_SOURCE_clk_pll1_out_;
-	_SWITCH_CLOCK_clk_dsp_root_SOURCE_clk_pll2_out_;
-	_SWITCH_CLOCK_clk_perh0_root_SOURCE_clk_pll0_out_;
 }
 
 /*only hartid 0 call this function*/
@@ -464,8 +461,6 @@ void BootMain(void)
 {	
 	int boot_mode = 0;
 	int ret=0;
-
-//	chip_clk_init();
 	
 	timer_init(0);
 	gpio_init();

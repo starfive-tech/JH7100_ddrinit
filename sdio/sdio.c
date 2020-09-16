@@ -7,6 +7,7 @@
 struct dwmci_host local_host0;
 struct mmc local_mmc0;
 
+#define DWMMC_BUS_FREQ		100000000
 #define DWMMC_MAX_FREQ		10000000
 #define DWMMC_MIN_FREQ		400000
 
@@ -15,6 +16,7 @@ struct mmc local_mmc0;
 
 static void sdio0_gpio_mux_select()
 {
+#if 0//for fpga 
     SET_GPIO_18_dout_sdio0_pad_cclk_out;
     //SET_GPIO_18_doen_sdio0_pad_cclk_out;
     SET_GPIO_18_doen_LOW;
@@ -47,6 +49,39 @@ static void sdio0_gpio_mux_select()
     SET_GPIO_16_doen_sdio0_pad_cdata_oe_bit3;
     SET_GPIO_16_dout_sdio0_pad_cdata_out_bit3;
     SET_GPIO_sdio0_pad_cdata_in_bit3(16);
+#endif
+	SET_GPIO_sdio0_pad_card_detect_n(26);
+	SET_GPIO_26_doen_HIGH;
+
+	SET_GPIO_33_dout_sdio0_pad_cclk_out;
+	SET_GPIO_33_doen_LOW;
+
+	SET_GPIO_34_doen_reverse_(1);
+	SET_GPIO_34_doen_sdio0_pad_ccmd_oe;
+	SET_GPIO_34_dout_sdio0_pad_ccmd_out;
+	SET_GPIO_sdio0_pad_ccmd_in(34);	
+
+	SET_GPIO_32_doen_reverse_(1);
+	SET_GPIO_31_doen_reverse_(1);
+	SET_GPIO_30_doen_reverse_(1);
+	SET_GPIO_36_doen_reverse_(1);
+
+	SET_GPIO_32_doen_sdio0_pad_cdata_oe_bit0;
+	SET_GPIO_32_dout_sdio0_pad_cdata_out_bit0;
+	SET_GPIO_sdio0_pad_cdata_in_bit0(32);
+
+	SET_GPIO_31_doen_sdio0_pad_cdata_oe_bit1;
+	SET_GPIO_31_dout_sdio0_pad_cdata_out_bit1;
+	SET_GPIO_sdio0_pad_cdata_in_bit1(31);
+
+	SET_GPIO_30_doen_sdio0_pad_cdata_oe_bit2;
+	SET_GPIO_30_dout_sdio0_pad_cdata_out_bit2;
+	SET_GPIO_sdio0_pad_cdata_in_bit2(30);
+
+	SET_GPIO_36_doen_sdio0_pad_cdata_oe_bit3;
+	SET_GPIO_36_dout_sdio0_pad_cdata_out_bit3;
+	SET_GPIO_sdio0_pad_cdata_in_bit3(36);
+
 }
 
 static struct mmc *init_mmc_device(int dev, unsigned int  force_init)
@@ -82,10 +117,10 @@ int boot_sdio_init(void)
 	RX_WMARK(fifo_depth / 2 - 1) | TX_WMARK(fifo_depth / 2);
 
 	host->buswidth = 4;
-	host->bus_hz = DWMMC_MAX_FREQ;
+	host->bus_hz = DWMMC_BUS_FREQ;
 	
 	/* Add the mmc channel to be registered with mmc core */
-	if (add_dwmci(host, host->bus_hz, DWMMC_MIN_FREQ, 0)) {
+	if (add_dwmci(host, DWMMC_MAX_FREQ, DWMMC_MIN_FREQ, 0)) {
 		printk("DWMMC0 registration failed\n");
 		return -1;
 	}

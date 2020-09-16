@@ -85,8 +85,8 @@ static void dwmci_prepare_data(struct dwmci_host *host,
 	dwmci_writel(host, DWMCI_CTRL, ctrl);
 
 	ctrl = dwmci_readl(host, DWMCI_BMOD);
-	//ctrl |= DWMCI_BMOD_IDMAC_FB | DWMCI_BMOD_IDMAC_EN;
-	ctrl |= DWMCI_BMOD_IDMAC_EN;
+	ctrl |= DWMCI_BMOD_IDMAC_FB | DWMCI_BMOD_IDMAC_EN;
+	//ctrl |= DWMCI_BMOD_IDMAC_EN;
 	dwmci_writel(host, DWMCI_BMOD, ctrl);
 
 	dwmci_writel(host, DWMCI_BLKSIZ, data->blocksize);
@@ -99,8 +99,7 @@ static int dwmci_data_transfer(struct dwmci_host *host, struct mmc_data *data)
 	u32 timeout = 40000000;
 	u32 mask=0, size, i, len = 0;
 	u32 *buf = NULL;
-	//unsigned int start = get_timer(0);
-	unsigned int start = 0;
+	unsigned int start = get_timer(0);
 	u32 fifo_depth = (((host->fifoth_val & RX_WMARK_MASK) >>
 			    RX_WMARK_SHIFT) + 1) * 2;
 
@@ -154,11 +153,8 @@ static int dwmci_data_transfer(struct dwmci_host *host, struct mmc_data *data)
 			ret = 0;
 			break;
 		}
-		start++;
-        udelay(100);
 		/* Check for timeout. */
-		//if (get_timer(start) > timeout) {
-			if(start > timeout){
+		if (get_timer(start) > timeout) {
 			printk("%s: Timeout waiting for data!\n",__func__);
 			ret = TIMEOUT;
 			break;
@@ -196,15 +192,12 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 	unsigned int timeout = 100000;
 	u32 retry = 10000;
 	u32 mask, ctrl;
-	//unsigned int start = get_timer(0);
-	unsigned int start = 0;
+	unsigned int start = get_timer(0);
 	struct bounce_buffer bbstate;
 
 	while ((dwmci_readl(host, DWMCI_STATUS) & DWMCI_BUSY)) {
 			start++;
-            udelay(10);
-		//if (get_timer(start) > timeout) {
-			if(start > timeout){
+		if (get_timer(start) > timeout) {
 
 			printk("%s: Timeout on data busy\r\n", __func__);
 			return TIMEOUT;
@@ -258,7 +251,7 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 
 	flags |= (cmd->cmdidx | DWMCI_CMD_START | DWMCI_CMD_USE_HOLD_REG);
 
-	printk("Sending CMD%d\r\n",cmd->cmdidx);
+//	printk("Sending CMD%d\r\n",cmd->cmdidx);
 
 	dwmci_writel(host, DWMCI_CMD, flags);
 
@@ -316,8 +309,6 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 		}
 	}
 
-	udelay(100);
-	//delay(100000);//libo
 	return ret;
 }
 
@@ -361,6 +352,7 @@ static int dwmci_setup_bus(struct dwmci_host *host, u32 freq)
 			//printf("%s: Timeout!\n", __func__);
 			return -1;
 		}
+		udelay(10);
 	} while (status & DWMCI_CMD_START);
 
 	dwmci_writel(host, DWMCI_CLKENA, DWMCI_CLKEN_ENABLE |
@@ -387,8 +379,6 @@ static void dwmci_set_ios(struct mmc *mmc)
 {
 	struct dwmci_host *host = (struct dwmci_host *)mmc->priv;
 	u32 ctype, regs;
-
-	//printf("Buswidth = %d, clock: %d\r\n", mmc->bus_width, mmc->clock);
 
 	dwmci_setup_bus(host, mmc->clock);
 	switch (mmc->bus_width) {

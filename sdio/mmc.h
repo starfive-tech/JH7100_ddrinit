@@ -14,9 +14,6 @@
 #define SD_VERSION_SD	(1U << 31)
 #define MMC_VERSION_MMC	(1U << 30)
 
-#define IF_TYPE_MMC		6
-#define IF_TYPE_SD      7
-
 #define MAKE_SDMMC_VERSION(a, b, c)	\
 	((((u32)(a)) << 16) | ((u32)(b) << 8) | (u32)(c))
 #define MAKE_SD_VERSION(a, b, c)	\
@@ -45,16 +42,23 @@
 #define MMC_VERSION_4_1		MAKE_MMC_VERSION(4, 1, 0)
 #define MMC_VERSION_4_2		MAKE_MMC_VERSION(4, 2, 0)
 #define MMC_VERSION_4_3		MAKE_MMC_VERSION(4, 3, 0)
+#define MMC_VERSION_4_4		MAKE_MMC_VERSION(4, 4, 0)
 #define MMC_VERSION_4_41	MAKE_MMC_VERSION(4, 4, 1)
 #define MMC_VERSION_4_5		MAKE_MMC_VERSION(4, 5, 0)
 #define MMC_VERSION_5_0		MAKE_MMC_VERSION(5, 0, 0)
+#define MMC_VERSION_5_1		MAKE_MMC_VERSION(5, 1, 0)
 
-#define MMC_MODE_HS		(1 << 0)
-#define MMC_MODE_HS_52MHz	(1 << 1)
-#define MMC_MODE_4BIT		(1 << 2)
-#define MMC_MODE_8BIT		(1 << 3)
-#define MMC_MODE_SPI		(1 << 4)
-#define MMC_MODE_DDR_52MHz	(1 << 5)
+#define MMC_CAP(mode)		(1 << mode)
+#define MMC_MODE_HS		(MMC_CAP(MMC_HS) | MMC_CAP(SD_HS))
+#define MMC_MODE_HS_52MHz	MMC_CAP(MMC_HS_52)
+#define MMC_MODE_DDR_52MHz	MMC_CAP(MMC_DDR_52)
+#define MMC_MODE_HS200		MMC_CAP(MMC_HS_200)
+
+#define MMC_MODE_8BIT		BIT(30)
+#define MMC_MODE_4BIT		BIT(29)
+#define MMC_MODE_1BIT		BIT(28)
+#define MMC_MODE_SPI		BIT(27)
+
 
 #define SD_DATA_4BIT	0x00040000
 
@@ -63,12 +67,6 @@
 
 #define MMC_DATA_READ		1
 #define MMC_DATA_WRITE		2
-
-#define NO_CARD_ERR		-16 /* No SD/MMC card inserted */
-#define UNUSABLE_ERR		-17 /* Unusable Card */
-#define COMM_ERR		-18 /* Communications Error */
-#define TIMEOUT			-19
-#define SWITCH_ERR		-20 /* Card reports failure to switch mode */
 
 #define MMC_CMD_GO_IDLE_STATE		0
 #define MMC_CMD_SEND_OP_COND		1
@@ -85,6 +83,8 @@
 #define MMC_CMD_SET_BLOCKLEN		16
 #define MMC_CMD_READ_SINGLE_BLOCK	17
 #define MMC_CMD_READ_MULTIPLE_BLOCK	18
+#define MMC_CMD_SEND_TUNING_BLOCK		19
+#define MMC_CMD_SEND_TUNING_BLOCK_HS200	21
 #define MMC_CMD_SET_BLOCK_COUNT         23
 #define MMC_CMD_WRITE_SINGLE_BLOCK	24
 #define MMC_CMD_WRITE_MULTIPLE_BLOCK	25
@@ -106,17 +106,40 @@
 #define SD_CMD_SWITCH_UHS18V		11
 
 #define SD_CMD_APP_SET_BUS_WIDTH	6
+#define SD_CMD_APP_SD_STATUS		13
 #define SD_CMD_ERASE_WR_BLK_START	32
 #define SD_CMD_ERASE_WR_BLK_END		33
 #define SD_CMD_APP_SEND_OP_COND		41
 #define SD_CMD_APP_SEND_SCR		51
 
+static inline bool mmc_is_tuning_cmd(u32 cmdidx)
+{
+	if ((cmdidx == MMC_CMD_SEND_TUNING_BLOCK_HS200) ||
+	    (cmdidx == MMC_CMD_SEND_TUNING_BLOCK))
+		return true;
+	return false;
+}
+
 /* SCR definitions in different words */
 #define SD_HIGHSPEED_BUSY	0x00020000
 #define SD_HIGHSPEED_SUPPORTED	0x00020000
 
+#define UHS_SDR12_BUS_SPEED	0
+#define HIGH_SPEED_BUS_SPEED	1
+#define UHS_SDR25_BUS_SPEED	1
+#define UHS_SDR50_BUS_SPEED	2
+#define UHS_SDR104_BUS_SPEED	3
+#define UHS_DDR50_BUS_SPEED	4
+
+#define SD_MODE_UHS_SDR12	BIT(UHS_SDR12_BUS_SPEED)
+#define SD_MODE_UHS_SDR25	BIT(UHS_SDR25_BUS_SPEED)
+#define SD_MODE_UHS_SDR50	BIT(UHS_SDR50_BUS_SPEED)
+#define SD_MODE_UHS_SDR104	BIT(UHS_SDR104_BUS_SPEED)
+#define SD_MODE_UHS_DDR50	BIT(UHS_DDR50_BUS_SPEED)
+
 #define OCR_BUSY		0x80000000
 #define OCR_HCS			0x40000000
+#define OCR_S18R		0x1000000
 #define OCR_VOLTAGE_MASK	0x007FFF80
 #define OCR_ACCESS_MODE		0x60000000
 
@@ -176,6 +199,7 @@
 #define EXT_CSD_MAX_ENH_SIZE_MULT	157	/* R */
 #define EXT_CSD_PARTITIONING_SUPPORT	160	/* RO */
 #define EXT_CSD_RST_N_FUNCTION		162	/* R/W */
+#define EXT_CSD_BKOPS_EN		163	/* R/W & R/W/E */
 #define EXT_CSD_WR_REL_PARAM		166	/* R */
 #define EXT_CSD_WR_REL_SET		167	/* R/W */
 #define EXT_CSD_RPMB_MULT		168	/* RO */
@@ -190,6 +214,7 @@
 #define EXT_CSD_HC_WP_GRP_SIZE		221	/* RO */
 #define EXT_CSD_HC_ERASE_GRP_SIZE	224	/* RO */
 #define EXT_CSD_BOOT_MULT		226	/* RO */
+#define EXT_CSD_BKOPS_SUPPORT		502	/* RO */
 
 /*
  * EXT_CSD field definitions
@@ -206,11 +231,23 @@
 #define EXT_CSD_CARD_TYPE_DDR_52	(EXT_CSD_CARD_TYPE_DDR_1_8V \
 					| EXT_CSD_CARD_TYPE_DDR_1_2V)
 
+#define EXT_CSD_CARD_TYPE_HS200_1_8V	BIT(4)	/* Card can run at 200MHz */
+						/* SDR mode @1.8V I/O */
+#define EXT_CSD_CARD_TYPE_HS200_1_2V	BIT(5)	/* Card can run at 200MHz */
+						/* SDR mode @1.2V I/O */
+#define EXT_CSD_CARD_TYPE_HS200		(EXT_CSD_CARD_TYPE_HS200_1_8V | \
+					 EXT_CSD_CARD_TYPE_HS200_1_2V)
+
 #define EXT_CSD_BUS_WIDTH_1	0	/* Card is in 1 bit mode */
 #define EXT_CSD_BUS_WIDTH_4	1	/* Card is in 4 bit mode */
 #define EXT_CSD_BUS_WIDTH_8	2	/* Card is in 8 bit mode */
 #define EXT_CSD_DDR_BUS_WIDTH_4	5	/* Card is in 4 bit DDR mode */
 #define EXT_CSD_DDR_BUS_WIDTH_8	6	/* Card is in 8 bit DDR mode */
+#define EXT_CSD_DDR_FLAG	BIT(2)	/* Flag for DDR mode */
+
+#define EXT_CSD_TIMING_LEGACY	0	/* no high speed */
+#define EXT_CSD_TIMING_HS	1	/* HS */
+#define EXT_CSD_TIMING_HS200	2	/* HS200 */
 
 #define EXT_CSD_BOOT_ACK_ENABLE			(1 << 6)
 #define EXT_CSD_BOOT_PARTITION_ENABLE		(1 << 3)
@@ -220,6 +257,10 @@
 #define EXT_CSD_BOOT_ACK(x)		(x << 6)
 #define EXT_CSD_BOOT_PART_NUM(x)	(x << 3)
 #define EXT_CSD_PARTITION_ACCESS(x)	(x << 0)
+
+#define EXT_CSD_EXTRACT_BOOT_ACK(x)		(((x) >> 6) & 0x1)
+#define EXT_CSD_EXTRACT_BOOT_PART(x)		(((x) >> 3) & 0x7)
+#define EXT_CSD_EXTRACT_PARTITION_ACCESS(x)	((x) & 0x7)
 
 #define EXT_CSD_BOOT_BUS_WIDTH_MODE(x)	(x << 3)
 #define EXT_CSD_BOOT_BUS_WIDTH_RESET(x)	(x << 2)
@@ -260,6 +301,20 @@
 #define PART_SUPPORT		(0x1)
 #define ENHNCD_SUPPORT		(0x2)
 #define PART_ENH_ATTRIB		(0x1f)
+
+#define MMC_QUIRK_RETRY_SEND_CID	BIT(0)
+#define MMC_QUIRK_RETRY_SET_BLOCKLEN	BIT(1)
+
+enum mmc_voltage {
+	MMC_SIGNAL_VOLTAGE_000 = 0,
+	MMC_SIGNAL_VOLTAGE_120 = 1,
+	MMC_SIGNAL_VOLTAGE_180 = 2,
+	MMC_SIGNAL_VOLTAGE_330 = 4,
+};
+
+#define MMC_ALL_SIGNAL_VOLTAGE (MMC_SIGNAL_VOLTAGE_120 |\
+				MMC_SIGNAL_VOLTAGE_180 |\
+				MMC_SIGNAL_VOLTAGE_330)
 
 /* Maximum block size for MMC */
 #define MMC_MAX_BLOCK_LEN	512
@@ -330,13 +385,73 @@ struct mmc_config {
 	u32 b_max;
 	unsigned char part_type;
 };
+struct sd_ssr {
+	unsigned int au;		/* In sectors */
+	unsigned int erase_timeout;	/* In milliseconds */
+	unsigned int erase_offset;	/* In milliseconds */
+};
+
+enum bus_mode {
+	MMC_LEGACY,
+	SD_LEGACY,
+	MMC_HS,
+	SD_HS,
+	MMC_HS_52,
+	MMC_DDR_52,
+	UHS_SDR12,
+	UHS_SDR25,
+	UHS_SDR50,
+	UHS_DDR50,
+	UHS_SDR104,
+	MMC_HS_200,
+	MMC_MODES_END
+};
+
+/* Interface types: */
+enum if_type {
+	IF_TYPE_UNKNOWN = 0,
+	IF_TYPE_IDE,
+	IF_TYPE_SCSI,
+	IF_TYPE_ATAPI,
+	IF_TYPE_USB,
+	IF_TYPE_DOC,
+	IF_TYPE_MMC,
+	IF_TYPE_SD,
+	IF_TYPE_SATA,
+	IF_TYPE_HOST,
+	IF_TYPE_NVME,
+	IF_TYPE_EFI,
+
+	IF_TYPE_COUNT,			/* Number of interface types */
+};
+
+#define BLK_VEN_SIZE		40
+#define BLK_PRD_SIZE		20
+#define BLK_REV_SIZE		8
+
+/*
+ * Identifies the partition table type (ie. MBR vs GPT GUID) signature
+ */
+enum sig_type {
+	SIG_TYPE_NONE,
+	SIG_TYPE_MBR,
+	SIG_TYPE_GUID,
+
+	SIG_TYPE_COUNT			/* Number of signature types */
+};
+
+typedef struct {
+	u8 b[16];
+} efi_guid_t;
+
 
 typedef struct block_dev_desc {
-	int		if_type;	/* type of the interface */
+	enum if_type		if_type;	/* type of the interface */
 	int		dev;		/* device number */
 	unsigned char	part_type;	/* partition type */
 	unsigned char	target;		/* target SCSI ID */
 	unsigned char	lun;		/* target LUN */
+	unsigned char	hwpart;		/* HW partition, e.g. for eMMC */
 	unsigned char	type;		/* device type */
 	unsigned char	removable;	/* removable device */
 #ifdef CONFIG_LBA48
@@ -348,6 +463,11 @@ typedef struct block_dev_desc {
 	char		vendor [40+1];	/* IDE model, SCSI Vendor */
 	char		product[20+1];	/* IDE Serial no, SCSI product */
 	char		revision[8+1];	/* firmware revision */
+	enum sig_type	sig_type;	/* Partition table signature type */
+	union {
+		uint32_t mbr_sig;	/* MBR integer signature */
+		efi_guid_t guid_sig;	/* GPT GUID Signature */
+	};
 	unsigned long	(*block_read)(int dev_num, unsigned long start, unsigned long blkcnt, void *dst);
 	unsigned long	(*block_write)(int dev_num, unsigned int start, unsigned int blkcnt, const void *src);
 	unsigned long   (*block_erase)(int dev,
@@ -356,7 +476,22 @@ typedef struct block_dev_desc {
 	void		*priv;		/* driver private struct pointer */
 }block_dev_desc_t;
 
+static inline bool mmc_is_mode_ddr(enum bus_mode mode)
+{
+	if (mode == MMC_DDR_52)
+		return true;
+	else
+		return false;
+}
 
+#define UHS_CAPS (MMC_CAP(UHS_SDR12) | MMC_CAP(UHS_SDR25) | \
+		  MMC_CAP(UHS_SDR50) | MMC_CAP(UHS_SDR104) | \
+		  MMC_CAP(UHS_DDR50))
+
+static inline bool supports_uhs(u32 caps)
+{
+	return false;
+}
 /* TODO struct mmc should be in mmc_private but it's hard to fix right now */
 struct mmc {
 	//struct list_head link;
@@ -364,10 +499,13 @@ struct mmc {
 	u32 version;
 	void *priv;
 	u32 has_init;
-	int high_capacity;
+	u32 high_capacity;
+	bool clk_disable; /* true if the clock can be turned off */
 	u32 bus_width;
 	u32 clock;
+	enum mmc_voltage signal_voltage;
 	u32 card_caps;
+	u32 host_caps;
 	u32 ocr;
 	u32 dsr;
 	u32 dsr_imp;
@@ -379,12 +517,13 @@ struct mmc {
 	u8 part_attr;
 	u8 wr_rel_set;
 	char part_config;
-	char part_num;
 	u32 tran_speed;
+	u32 legacy_speed; /* speed for the legacy mode provided by the card */
 	u32 read_bl_len;
 	u32 write_bl_len;
 	u32 erase_grp_size;	/* in 512-byte sectors */
 	u32 hc_wp_grp_size;	/* in 512-byte sectors */
+	struct sd_ssr	ssr;	/* SD status register */
 	UINT64 capacity;
 	UINT64 capacity_user;
 	UINT64 capacity_boot;
@@ -397,6 +536,16 @@ struct mmc {
 	char init_in_progress;	/* 1 if we have done mmc_start_init() */
 	char preinit;		/* start init as early as possible */
 	int ddr_mode;
+	u8 *ext_csd;
+	u32 cardtype;		/* cardtype read from the MMC */
+	enum mmc_voltage current_voltage;
+	enum bus_mode selected_mode; /* mode currently used */
+	enum bus_mode best_mode; /* best mode is the supported mode with the
+				  * highest bandwidth. It may not always be the
+				  * operating mode due to limitations when
+				  * accessing the boot partitions
+				  */
+	u32 quirks;
 };
 
 struct mmc_hwpart_conf {
@@ -426,7 +575,10 @@ void mmc_destroy(struct mmc *mmc);
 
 int mmc_init(struct mmc *mmc);
 int mmc_read(struct mmc *mmc, UINT64 src, unsigned char *dst, int size);
-void mmc_set_clock(struct mmc *mmc, u32 clock);
+void mmc_set_clock(struct mmc *mmc, u32 clock, bool disable);
+
+#define MMC_CLK_ENABLE		false
+#define MMC_CLK_DISABLE		true
 
 int mmc_set_dev(int dev_num);
 void print_mmc_devices(char separator);

@@ -11,6 +11,7 @@
 #include <mmc.h>
 #include <dwmmc.h>
 #include <timer.h>
+#include "errno.h"
 
 
 #define PAGE_SIZE 4096
@@ -114,38 +115,42 @@ static int dwmci_data_transfer(struct dwmci_host *host, struct mmc_data *data)
 		/* Error during data transfer. */
 		if (mask & (DWMCI_DATA_ERR | DWMCI_DATA_TOUT)) {
 			printk("%s: DATA ERROR! mask:0x%x  0x%x\r\n", __func__,mask,(DWMCI_DATA_ERR | DWMCI_DATA_TOUT));
-			ret = -1;
+			ret = -EINVAL;
 			break;
 		}
 
 		if (host->fifo_mode && size) {
-			if (data->flags == MMC_DATA_READ) {
-				if ((dwmci_readl(host, DWMCI_RINTSTS) &&
-				     DWMCI_INTMSK_RXDR)) {
+			len = 0;
+			if (data->flags == MMC_DATA_READ &&
+			    (mask & DWMCI_INTMSK_RXDR)) {
+				while (size) {
 					len = dwmci_readl(host, DWMCI_STATUS);
 					len = (len >> DWMCI_FIFO_SHIFT) &
 						    DWMCI_FIFO_MASK;
+					len = min(size, len);
 					for (i = 0; i < len; i++)
 						*buf++ =
 						dwmci_readl(host, DWMCI_DATA);
-					dwmci_writel(host, DWMCI_RINTSTS,
-						     DWMCI_INTMSK_RXDR);
+					size = size > len ? (size - len) : 0;
 				}
-			} else {
-				if ((dwmci_readl(host, DWMCI_RINTSTS) &&
-				     DWMCI_INTMSK_TXDR)) {
+				dwmci_writel(host, DWMCI_RINTSTS,
+					     DWMCI_INTMSK_RXDR);
+			} else if (data->flags == MMC_DATA_WRITE &&
+				   (mask & DWMCI_INTMSK_TXDR)) {
+				while (size) {
 					len = dwmci_readl(host, DWMCI_STATUS);
 					len = fifo_depth - ((len >>
 						   DWMCI_FIFO_SHIFT) &
 						   DWMCI_FIFO_MASK);
+					len = min(size, len);
 					for (i = 0; i < len; i++)
 						dwmci_writel(host, DWMCI_DATA,
 							     *buf++);
-					dwmci_writel(host, DWMCI_RINTSTS,
-						     DWMCI_INTMSK_TXDR);
+					size = size > len ? (size - len) : 0;
 				}
+				dwmci_writel(host, DWMCI_RINTSTS,
+					     DWMCI_INTMSK_TXDR);
 			}
-			size = size > len ? (size - len) : 0;
 		}
 
 		/* Data arrived correctly. */
@@ -156,7 +161,7 @@ static int dwmci_data_transfer(struct dwmci_host *host, struct mmc_data *data)
 		/* Check for timeout. */
 		if (get_timer(start) > timeout) {
 			printk("%s: Timeout waiting for data!\n",__func__);
-			ret = TIMEOUT;
+			ret = -ETIMEDOUT;
 			break;
 
 
@@ -196,11 +201,10 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 	struct bounce_buffer bbstate;
 
 	while ((dwmci_readl(host, DWMCI_STATUS) & DWMCI_BUSY)) {
-			start++;
 		if (get_timer(start) > timeout) {
 
 			printk("%s: Timeout on data busy\r\n", __func__);
-			return TIMEOUT;
+			return -ETIMEDOUT;
 		}
 	}
 
@@ -266,7 +270,7 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 
 	if (i == retry) {
 		printk("%s: Timeout.\r\n", __func__);
-		return TIMEOUT;
+		return -ETIMEDOUT;
 	}
 
 	if (mask & DWMCI_INTMSK_RTO) {
@@ -279,10 +283,10 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 		 * CMD8, please keep that in mind.
 		 */
 		printk("%s: Response Timeout.\r\n", __func__);
-		return TIMEOUT;
+		return -ETIMEDOUT;
 	} else if (mask & DWMCI_INTMSK_RE) {
 		printk("%s: Response Error.\r\n", __func__);
-		return -1;
+		return -EIO;
 	}
 
 
@@ -331,7 +335,7 @@ static int dwmci_setup_bus(struct dwmci_host *host, u32 freq)
 		sclk = host->bus_hz;
 	else {
 		//printf("%s: Didn't get source clock value.\r\n", __func__);
-		return -1;
+		return -EINVAL;
 	}
 
 	if (sclk == freq)
@@ -350,9 +354,8 @@ static int dwmci_setup_bus(struct dwmci_host *host, u32 freq)
 		status = dwmci_readl(host, DWMCI_CMD);
 		if (timeout-- < 0) {
 			//printf("%s: Timeout!\n", __func__);
-			return -1;
+			return -ETIMEDOUT;
 		}
-		udelay(10);
 	} while (status & DWMCI_CMD_START);
 
 	dwmci_writel(host, DWMCI_CLKENA, DWMCI_CLKEN_ENABLE |
@@ -366,7 +369,7 @@ static int dwmci_setup_bus(struct dwmci_host *host, u32 freq)
 		status = dwmci_readl(host, DWMCI_CMD);
 		if (timeout-- < 0) {
 			//printf("%s: Timeout!\r\n", __func__);
-			return -1;
+			return -ETIMEDOUT;
 		}
 	} while (status & DWMCI_CMD_START);
 
@@ -419,7 +422,7 @@ static int dwmci_init(struct mmc *mmc)
 
 	if (!dwmci_wait_reset(host, DWMCI_RESET_ALL)) {
 		printk("%s[%d] Fail-reset!!\n", __func__, __LINE__);
-		return -1;
+		return -EIO;
 	}
 
 	/* Enumerate at 400KHz */
@@ -473,9 +476,9 @@ int add_dwmci(struct dwmci_host *host, u32 max_clk, u32 min_clk,u32 dev_num)
 		host->cfg.host_caps |= MMC_MODE_4BIT;
 		host->cfg.host_caps &= ~MMC_MODE_8BIT;
 	}
-	//host->cfg.host_caps |= MMC_MODE_HS | MMC_MODE_HS_52MHz;
+	host->cfg.host_caps |= MMC_MODE_HS | MMC_MODE_HS_52MHz;
 
-	host->cfg.b_max = 2048;
+	host->cfg.b_max = CONFIG_SYS_MMC_MAX_BLK_COUNT;
 
 	host->mmc = mmc_create(&host->cfg, host, dev_num);
 	if (host->mmc == NULL)

@@ -9,6 +9,7 @@ History:
 
 #include "cmd.h"
 #include "comdef.h"
+#include "uart.h"
 
 #define			CMD_MAXNUM			4
 
@@ -385,8 +386,8 @@ int LoadProc( void * Context , int argc , char ** argv )
 		}
 		else
 		{
-			retflag = xmodem_recv_file((unsigned char *)pStart, 0);
-      	
+//			retflag = xmodem_recv_file((unsigned char *)pStart, 0);
+			retflag = xmodemReceive((unsigned char *)pStart, 0);
 			rlSendString( "\r\nLoad file " );
 			if(retflag == TRUE)
 			{

@@ -1,200 +1,306 @@
-/*=====================================================
-Copyright (c) 2020 by StarFiveTech  Incorporated. All Rights Reserved.
-FileName: xmodem.c
-Author:              Date:
-Description:     
-Version:        
-History:        
-<author>  <time>    <version>        <desc>
-      ABC     49/10/01     1.0        build this moudle  
-=====================================================*/
+/*	
+ * Copyright 2001-2019 Georges Menie (www.menie.org)
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of the University of California, Berkeley nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-#include "xmodem.h"
-#include "uart.h"
+/* this code needs standard functions memcpy() and memset()
+   and input/output functions _inbyte() and _outbyte().
+
+   the prototypes of the input/output functions are:
+     int _inbyte(unsigned short timeout); // msec timeout
+     void _outbyte(int c);
+
+ */
 #include "util.h"
+#include "crc16.h"
 
-//Define Xmodem control char
-#define XMODEM_NUL 0x00 
-#define XMODEM_SOH 0x01 
-#define XMODEM_STX 0x02 
-#define XMODEM_EOT 0x04 
-#define XMODEM_ACK 0x06 
-#define XMODEM_NAK 0x15 
-#define XMODEM_CAN 0x18 
-#define XMODEM_EOF 0x1A 
+#define SOH  0x01
+#define STX  0x02
+#define EOT  0x04
+#define ACK  0x06
+#define NAK  0x15
+#define CAN  0x18
+#define CTRLZ 0x1A
 
-/* receive 128 or 1k byte data */
-#define	DATA_BUFFER_SIZE_128	128	
-#define	DATA_BUFFER_SIZE_1k	1024	
+#define DLY_1S 1000
+#define MAXRETRANS 25
 
-
-/* timeout value and retry times */
-#define TIMEOUT_VAL			0x3000
-#define	RETRY_TIMES			0x400
-
-#define		XMODEM_BUFFER				0x18016000
-unsigned int receive_count = 0;
-
-
-//: 0719 del
-//:UINT8 rbuf[DATA_BUFFER_SIZE_128+1+2+2+1]; 
-
-
-/* uart send out a char */
-void uart_putchar(char c) 
-{ 
-	_putc(c);
-} 
-
-/* uart get in a char */
-int uart_getchar(void) 
-{ 
-	int c;
-	c=serial_getc();
-
-    return (char)c;
-
-} 
-
-
-/* uart wait for a char */
-char uart_waitchar(void) 
-{ 
-	int c; 
-	do{
-		c = uart_getchar();
-	}while(c==-1);
-	return (char)c; 
-}
-
-
-/* calculate the CRC value */
-int calcrc(char *ptr, int count) 
-{ 
-    int crc = 0; 
-    char i; 
-     
-    while (--count >= 0) 
-    { 
-        crc = crc ^ (int) *ptr++ << 8; 
-        i = 8; 
-        do 
-        { 
-        if (crc & 0x8000) 
-            crc = crc << 1 ^ 0x1021; 
-        else 
-            crc = crc << 1; 
-        } while(--i); 
-    } 
-    return (crc); 
-} 
-
-
-/* receive file via Xmodem protocol, by 128 or 1k */
-UINT32 xmodem_recv_file(UINT8 *start_addr, UINT32 len)
+static int check(int crc, const unsigned char *buf, int sz)
 {
-	UINT32 timeout;
-	UINT32 timeout_max;
-
-	UINT32 i;
-	char mych;
-	UINT8 *s_ptr;
-	UINT8 *t_ptr;
-    int ret = 0;
-
-	/* initialize var */
-	i = 0;
-	timeout = 0;
-	timeout_max = TIMEOUT_VAL;	// max timeout value
-	
-	//s_ptr = &rbuf[0];			
-	s_ptr = (UINT8 *)(XMODEM_BUFFER);		//: 20060719, size is (DATA_BUFFER_SIZE_128+1+2+2+1)
-	t_ptr = start_addr;			// init the start point of memory
-	
-
-	/* clear buffer */
-	for(i=0;i<(DATA_BUFFER_SIZE_128+1+2+2+1); i++)
-	{
-		*(s_ptr + i) = 0xff;
+	if (crc) {
+		unsigned short crc = crc16_ccitt(buf, sz);
+		unsigned short tcrc = (buf[sz]<<8)+buf[sz+1];
+		if (crc == tcrc)
+			return 1;
 	}
-	  
-	/* wait for SOH */
-	while(1)
-	{
-		mych = serial_nowait_getc();		
-		switch(mych)
-		{
-			case XMODEM_SOH:
-                *(UINT8 *)(s_ptr+0)= mych;		// store SOH
-				ret = xmodem_recv_128(s_ptr+1, len);
-				if(ret == 1)
-				{
-					sys_memcpy(t_ptr, (s_ptr+1+2), DATA_BUFFER_SIZE_128);	// copy data to memory
-					t_ptr += DATA_BUFFER_SIZE_128;					// update the memory point
-					receive_count++;
-				}
-				break;
-			case XMODEM_EOT:
-				//	case XMODEM_EOF:	//: the remained filled as EOF(0x1A)
-				*(UINT8 *)(s_ptr+DATA_BUFFER_SIZE_128+1+2+2)= mych;		// store EOT/EOF
-				uart_putchar(XMODEM_ACK);
-				return TRUE;
-				break;
-			case XMODEM_CAN:
-				*(UINT8 *)(s_ptr+DATA_BUFFER_SIZE_128+1+2+2)= mych;		// store CAN
-				uart_putchar(XMODEM_CAN);
-				return FALSE;		
-				break;
-			default:
-				timeout++;
-				if(timeout >= timeout_max)
-				{
-					timeout=0;
-					uart_putchar('C');
-				} 			
-				break;
+	else {
+		int i;
+		unsigned char cks = 0;
+		for (i = 0; i < sz; ++i) {
+			cks += buf[i];
 		}
- 	}	
- 	return TRUE;	 
+		if (cks == buf[sz])
+		return 1;
+	}
+
+	return 0;
 }
 
-
-UINT32 xmodem_recv_128(UINT8 *start_addr, UINT32 len)
+static void flushinput(void)
 {
-	UINT8 *ptr;
-	UINT8 fr1, fr2;
-	UINT16 crc1, crc2;
-	UINT32 i;
-	char mych;
-	
-	ptr = start_addr;
-
- 	 for(i=0;i<(2+DATA_BUFFER_SIZE_128+2);i++)                // receive 128 byte data
-	{ 
-		mych=uart_waitchar();
-		*(UINT8 *)(ptr+i)= mych;    
-	}       		   	
-	fr1 = *(UINT8 *)(ptr+0);
-	fr2 = *(UINT8 *)(ptr+1);
-	
-	/* check frame */
-	if( (fr1+fr2) != 0xff)
-	{
-		uart_putchar(XMODEM_NAK);    
-		return FALSE;
-	}
-	/* check crc */
-	fr1 = *(UINT8 *)(ptr+DATA_BUFFER_SIZE_128+2+0);
-	fr2 = *(UINT8 *)(ptr+DATA_BUFFER_SIZE_128+2+1);
-	crc1 = (fr1<<8)|fr2;
-	crc2 = calcrc((char *)(ptr+2),128);
-	if(crc1 != crc2)
-	{
-		uart_putchar(XMODEM_NAK);    
-		return FALSE;
-	}
-	uart_putchar(XMODEM_ACK); 
-	return TRUE;
+	while (_inbyte(((DLY_1S)*3)>>1) >= 0)
+		;
 }
 
- 
+int xmodemReceive(unsigned char *dest, int destsz)
+{
+	unsigned char xbuff[1030]; /* 1024 for XModem 1k + 3 head chars + 2 crc + nul */
+	unsigned char *p;
+	int bufsz, crc = 0;
+	unsigned char trychar = 'C';
+	unsigned char packetno = 1;
+	int i, c, len = 0;
+	int retry, retrans = MAXRETRANS;
+
+	for(;;) {
+		for( retry = 0; retry < 16; ++retry) {
+			if (trychar) _outbyte(trychar);
+			if ((c = _inbyte((DLY_1S)<<1)) >= 0) {
+				switch (c) {
+				case SOH:
+					bufsz = 128;
+					goto start_recv;
+				case STX:
+					bufsz = 1024;
+					goto start_recv;
+				case EOT:
+					flushinput();
+					_outbyte(ACK);
+					return len; /* normal end */
+				case CAN:
+					if ((c = _inbyte(DLY_1S)) == CAN) {
+						flushinput();
+						_outbyte(ACK);
+						return -1; /* canceled by remote */
+					}
+					break;
+				default:
+					break;
+				}
+			}
+		}
+		if (trychar == 'C') { trychar = NAK; continue; }
+		flushinput();
+		_outbyte(CAN);
+		_outbyte(CAN);
+		_outbyte(CAN);
+		return -2; /* sync error */
+
+	start_recv:
+		if (trychar == 'C') crc = 1;
+		trychar = 0;
+		p = xbuff;
+		*p++ = c;
+		for (i = 0;  i < (bufsz+(crc?1:0)+3); ++i) {
+			if ((c = _inbyte(DLY_1S)) < 0) goto reject;
+			*p++ = c;
+		}
+
+		if (xbuff[1] == (unsigned char)(~xbuff[2]) && 
+			(xbuff[1] == packetno || xbuff[1] == (unsigned char)packetno-1) &&
+			check(crc, &xbuff[3], bufsz)) {
+			if (xbuff[1] == packetno)	{
+//				register int count = destsz - len;
+//				if (count > bufsz) count = bufsz;
+				if (bufsz > 0) {
+					sys_memcpy (&dest[len], &xbuff[3], bufsz);
+					len += bufsz;
+				}
+				++packetno;
+				retrans = MAXRETRANS+1;
+			}
+			if (--retrans <= 0) {
+				flushinput();
+				_outbyte(CAN);
+				_outbyte(CAN);
+				_outbyte(CAN);
+				return -3; /* too many retry error */
+			}
+			_outbyte(ACK);
+			continue;
+		}
+	reject:
+		flushinput();
+		_outbyte(NAK);
+	}
+}
+
+int xmodemTransmit(unsigned char *src, int srcsz)
+{
+	unsigned char xbuff[1030]; /* 1024 for XModem 1k + 3 head chars + 2 crc + nul */
+	int bufsz, crc = -1;
+	unsigned char packetno = 1;
+	int i, c, len = 0;
+	int retry;
+
+	for(;;) {
+		for( retry = 0; retry < 16; ++retry) {
+			if ((c = _inbyte((DLY_1S)<<1)) >= 0) {
+				switch (c) {
+				case 'C':
+					crc = 1;
+					goto start_trans;
+				case NAK:
+					crc = 0;
+					goto start_trans;
+				case CAN:
+					if ((c = _inbyte(DLY_1S)) == CAN) {
+						_outbyte(ACK);
+						flushinput();
+						return -1; /* canceled by remote */
+					}
+					break;
+				default:
+					break;
+				}
+			}
+		}
+		_outbyte(CAN);
+		_outbyte(CAN);
+		_outbyte(CAN);
+		flushinput();
+		return -2; /* no sync */
+
+		for(;;) {
+		start_trans:
+			xbuff[0] = SOH; bufsz = 128;
+			xbuff[1] = packetno;
+			xbuff[2] = ~packetno;
+			c = srcsz - len;
+			if (c > bufsz) c = bufsz;
+			if (c >= 0) {
+				sys_memset (&xbuff[3], 0, bufsz);
+				if (c == 0) {
+					xbuff[3] = CTRLZ;
+				}
+				else {
+					sys_memcpy (&xbuff[3], &src[len], c);
+					if (c < bufsz) xbuff[3+c] = CTRLZ;
+				}
+				if (crc) {
+					unsigned short ccrc = crc16_ccitt(&xbuff[3], bufsz);
+					xbuff[bufsz+3] = (ccrc>>8) & 0xFF;
+					xbuff[bufsz+4] = ccrc & 0xFF;
+				}
+				else {
+					unsigned char ccks = 0;
+					for (i = 3; i < bufsz+3; ++i) {
+						ccks += xbuff[i];
+					}
+					xbuff[bufsz+3] = ccks;
+				}
+				for (retry = 0; retry < MAXRETRANS; ++retry) {
+					for (i = 0; i < bufsz+4+(crc?1:0); ++i) {
+						_outbyte(xbuff[i]);
+					}
+					if ((c = _inbyte(DLY_1S)) >= 0 ) {
+						switch (c) {
+						case ACK:
+							++packetno;
+							len += bufsz;
+							goto start_trans;
+						case CAN:
+							if ((c = _inbyte(DLY_1S)) == CAN) {
+								_outbyte(ACK);
+								flushinput();
+								return -1; /* canceled by remote */
+							}
+							break;
+						case NAK:
+						default:
+							break;
+						}
+					}
+				}
+				_outbyte(CAN);
+				_outbyte(CAN);
+				_outbyte(CAN);
+				flushinput();
+				return -4; /* xmit error */
+			}
+			else {
+				for (retry = 0; retry < 10; ++retry) {
+					_outbyte(EOT);
+					if ((c = _inbyte((DLY_1S)<<1)) == ACK) break;
+				}
+				flushinput();
+				return (c == ACK)?len:-5;
+			}
+		}
+	}
+}
+
+#ifdef TEST_XMODEM_RECEIVE
+int main(void)
+{
+	int st;
+
+	printf ("Send data using the xmodem protocol from your terminal emulator now...\n");
+	/* the following should be changed for your environment:
+	   0x30000 is the download address,
+	   65536 is the maximum size to be written at this address
+	 */
+	st = xmodemReceive((char *)0x30000, 65536);
+	if (st < 0) {
+		printf ("Xmodem receive error: status: %d\n", st);
+	}
+	else  {
+		printf ("Xmodem successfully received %d bytes\n", st);
+	}
+
+	return 0;
+}
+#endif
+#ifdef TEST_XMODEM_SEND
+int main(void)
+{
+	int st;
+
+	printf ("Prepare your terminal emulator to receive data now...\n");
+	/* the following should be changed for your environment:
+	   0x30000 is the download address,
+	   12000 is the maximum size to be send from this address
+	 */
+	st = xmodemTransmit((char *)0x30000, 12000);
+	if (st < 0) {
+		printf ("Xmodem transmit error: status: %d\n", st);
+	}
+	else  {
+		printf ("Xmodem successfully transmitted %d bytes\n", st);
+	}
+
+	return 0;
+}
+#endif

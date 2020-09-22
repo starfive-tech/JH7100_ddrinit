@@ -48,6 +48,7 @@ OBJECTLIST=../boot/start.o \
 		../uart/uart.o \
 		../uart/cmd.o \
 		../uart/xmodem.o \
+		../uart/crc16.o \
 		../common/util.o \
 		../common/ctype.o \
 		../gpio/gpio.o \

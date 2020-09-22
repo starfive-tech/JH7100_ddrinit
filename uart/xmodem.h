@@ -18,10 +18,12 @@ extern "C" {
 
 #include "comdef.h"
 
-/* ?returns the number of bytes transferred */
-UINT32 xmodem_recv_file(UINT8 *start_addr, UINT32 len);
-UINT32 xmodem_recv_128(UINT8 *start_addr, UINT32 len);
+/* returns the number of bytes transferred */
+//UINT32 xmodem_recv_file(UINT8 *start_addr, UINT32 len);
+//UINT32 xmodem_recv_128(UINT8 *start_addr, UINT32 len);
 
+int xmodemReceive(unsigned char *dest, int destsz);
+int xmodemTransmit(unsigned char *src, int srcsz);
 
 #ifdef __cplusplus
 }

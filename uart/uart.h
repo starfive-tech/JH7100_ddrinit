@@ -171,6 +171,7 @@ extern int CtrlBreak( void );
 extern int serial_nowait_getc();
 extern void print_ubyte_hex(unsigned char bval);
 extern void printk(const char* s, ...);
-
+extern int _inbyte(unsigned short timeout);
+extern void _outbyte(int c);
 
 #endif // _UART_H

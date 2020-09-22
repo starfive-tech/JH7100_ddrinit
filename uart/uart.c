@@ -336,3 +336,26 @@ void printk(const char* s, ...)
 }
 #endif
 
+int _inbyte(unsigned short timeout) // msec timeout
+{
+    unsigned int c;
+    unsigned int delay = timeout*20;
+
+    while (!(serial_in(REG_LSR) & LSR_RXRDY)) {
+        udelay(50);
+        if (timeout && (--delay == 0)) {
+            return -1;
+        }
+    }
+    c = serial_in(REG_RDR);
+    return c;
+}
+
+void _outbyte(int c)
+{
+    while(!(serial_in(REG_LSR) & LSR_TEMT))
+        ;
+
+    serial_out(REG_THR, c);
+}
+

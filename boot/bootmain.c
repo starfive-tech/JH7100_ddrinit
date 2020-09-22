@@ -113,37 +113,22 @@ int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,u32 load_addr,unsign
     int ret = 0;
     u32 offset = 0;
     int erase_block = 0;
-    unsigned int receive_count_align = 0;
+    unsigned int page_count = 0;
     unsigned int index = 0;
 	unsigned int blockSize,pageSize;
 	u8 *data;
 
     printk("send file by xmodem\r\n");
-    receive_count = 0;
-    ret = xmodem_recv_file((unsigned char *)load_addr, 0);
-    if(ret == 0)
-        return;
 	
 	blockSize = spi_flash->block_size;
 	pageSize = spi_flash->page_size;
 	
-    if(receive_count % 2)
-	{
-		receive_count_align = receive_count + 1;//page align
-	}
-	else
-	{
-		receive_count_align = receive_count;
-	}
+	ret = xmodemReceive((unsigned char *)load_addr,0);
+	if(ret <= 0)
+		return -1;
 
-	if((receive_count_align * 128) % (64 * 1024))
-	{
-		erase_block = (receive_count_align * 128) / (64 * 1024) + 1;
-	}
-	else
-	{
-		erase_block = (receive_count_align * 128) / (64 * 1024);
-	}
+	erase_block = (ret + blockSize - 1) / blockSize;
+	page_count = (ret + pageSize - 1) / pageSize;
 
 	/*erase flash*/
 	offset = flash_addr;
@@ -161,7 +146,7 @@ int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,u32 load_addr,unsign
 	/*write data*/
 	offset = flash_addr;
 	data = (u8 *)load_addr;
-	for(index=0; index<receive_count_align / 2; index++)
+	for(index=0; index<page_count; index++)
 	{
 		ret = spi_flash->write(spi_flash, offset,pageSize, data, mode);
 		

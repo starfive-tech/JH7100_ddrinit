@@ -305,7 +305,7 @@ void orbit_boot(uint32_t OMC_APB_BASE_ADDR, uint32_t OMC_SECURE_APB_BASE_ADDR, u
     apb_write(OMC_APB_BASE_ADDR + 0xc, 0x00000002);
     apb_write(OMC_APB_BASE_ADDR + 0x4, 0x300b0066);
     apb_write(OMC_APB_BASE_ADDR + 0xc, 0x00000002);
-    apb_write(OMC_APB_BASE_ADDR + 0x4, 0x30160006);
+    apb_write(OMC_APB_BASE_ADDR + 0x4, 0x3016001e); //0x30160006
     apb_write(OMC_APB_BASE_ADDR + 0xc, 0x00000002);
     apb_write(OMC_APB_BASE_ADDR + 0x410, 0x00101010);
     apb_write(OMC_APB_BASE_ADDR + 0x420, 0x0c181006);

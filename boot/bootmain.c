@@ -27,7 +27,7 @@
 #include "clkgen_ctrl_macro.h"
 #include "syscon_sysmain_ctrl_macro.h"
 
-#define BOOTLOADER_VERSION	"2020.9.27"
+#define BOOTLOADER_VERSION	"2020.9.28.lb-u"
 
 extern void boot_sdio_init(void);
 extern int boot_load_gpt_partition(void* dst, const gpt_guid* partition_type_guid);

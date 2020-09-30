@@ -7,8 +7,12 @@ LD=${CROSSCOMPILE}ld
 OBJCOPY=${CROSSCOMPILE}objcopy
 OBJDUMP=${CROSSCOMPILE}objdump
 
+SUFFIX=$(shell date +%y%m%d)
+GIT_VERSION=$(shell git show -s --pretty=format:%h)
+VERSION=$(SUFFIX)-$(GIT_VERSION)
 
-TARGET 	= ddrinit
+TARGET 	= ddrinit-$(SUFFIX)
+
 LINKER_SCRIPT := ddrinit.lds
 MAP_FILE := ddrinit.map
 
@@ -32,7 +36,7 @@ INCLUDE_DIR = -I. -I../boot\
 RISCV_ARCH := rv64imafdc
 RISCV_ABI  := lp64d 
 
-CFLAGS += -O2 -g -c -Wall
+CFLAGS += -O2 -g -c -Wall -DVERSION=\"$(VERSION)\"
 CFLAGS += -march=$(RISCV_ARCH)
 CFLAGS += -mabi=$(RISCV_ABI)
 CFLAGS += -mcmodel=medany

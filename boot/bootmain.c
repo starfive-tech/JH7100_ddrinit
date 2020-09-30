@@ -27,8 +27,6 @@
 #include "clkgen_ctrl_macro.h"
 #include "syscon_sysmain_ctrl_macro.h"
 
-#define BOOTLOADER_VERSION	"2020.9.28.lb-u"
-
 extern void boot_sdio_init(void);
 extern int boot_load_gpt_partition(void* dst, const gpt_guid* partition_type_guid);
 extern const gpt_guid gpt_guid_sifive_uboot;
@@ -272,7 +270,7 @@ void boot_from_sdio(void)
 	boot_load_gpt_partition((void *)DEFAULT_UBOOT_ADDR,&gpt_guid_sifive_uboot);
 
 	/*load kernel bin file from sd card*/
-	boot_load_gpt_partition((void *)DEFAULT_KERNEL_ADDR,&gpt_guid_sifive_kernel);
+//	boot_load_gpt_partition((void *)DEFAULT_KERNEL_ADDR,&gpt_guid_sifive_kernel);
 }
 
 
@@ -448,7 +446,6 @@ void BootMain(void)
 	int boot_mode = 0;
 	int ret=0;
 
-	timer_init(0);
 	gpio_init();
 	uart_init(3);
 
@@ -456,7 +453,7 @@ void BootMain(void)
 	if(ret == 0)
 	{
 		_SET_SYSCON_REG_register68_SCFG_disable_u74_memaxi_remap(1);
-		printk("DDR clk 2133M,Version %s\r\n",BOOTLOADER_VERSION);
+		printk("DDR clk 2133M,Version: %s\r\n",VERSION);
 	}
 	else
 		printk("End init lpddr4, test ddr fail\r\n");

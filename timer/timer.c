@@ -13,13 +13,16 @@
 #include <uart.h>
 #include <div64.h>
 
+#define TIMER_RATE_HZ				(TIMER_CLK_HZ /1000)  
+
+#if 0
 #define VIC_TIMER_NUM	        7
 #define VIC_TIMER_NUM_MAX        7
 #define VIC_SYS_TIMER          0
 
 #define CONFIG_SYS_HZ               1000
 
-#define TIMER_RATE_HZ				(CONFIG_SYS_HZ_CLOCK /CONFIG_SYS_HZ)  
+#define TIMER_RATE_HZ				(CONFIG_SYS_HZ_CLOCK /1000)  
 #define WDOG_UNKOCK                 0x378f0765
 
 u32 interrupt_count = 0;
@@ -300,10 +303,17 @@ u32 get_ticks(u32 tick_base)
 	lastdec = now;
 	return (u32)(timestamp-tick_base);
 }
+#endif
+#include "platform.h"
+
+unsigned long long get_ticks(void)
+{
+	return readq(CLINT_CTRL_MTIME);
+}
 
 u32 get_timer(unsigned int base)
 {
-	return lldiv(get_ticks(0), TIMER_RATE_HZ) - base;
+	return lldiv(get_ticks(), TIMER_RATE_HZ) - base;
 }
 #if 0
 u32 usec_to_tick(u32 usec)
@@ -331,12 +341,11 @@ int udelay(u32 usec)
 }
 
 #endif
-#include "platform.h"
 
 u64 usec_to_tick(u64 usec)
 {
     u64 value;
-    value = usec*(TIMER_CLK_HZ/1000000);
+    value = usec*(TIMER_CLK_HZ/1000)/1000;
     return value;
 }
 

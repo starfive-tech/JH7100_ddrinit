@@ -29,7 +29,7 @@ struct cadence_spi_slave vic_spi_slave;
 #define CQSPI_INDIRECT_READ		2
 #define CQSPI_INDIRECT_WRITE	3
 #define CADENCE_QSPI_MAX_HZ		QSPI_CLK
-#define CONFIG_CQSPI_REF_CLK	QSPI_CLK
+#define CONFIG_CQSPI_REF_CLK	QSPI_REF_CLK
 #define CONFIG_CQSPI_DECODER	0
 static int cadence_spi_write_speed(unsigned int hz)
 {

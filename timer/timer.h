@@ -3,6 +3,7 @@
 
 #include <comdef.h>
 
+#if 0
 #define RUN_MODE_CONTINOUS     0
 #define RUN_MODE_SINGLE		1
 
@@ -42,8 +43,6 @@ struct timer_init_s{
  * Returns: 0 on success, not 0 on failure
  */
 int timer_clr_int_status(u32 id);
-
-u32 get_timer(unsigned int base);
 
 /*---------------------------------------------------
  *
@@ -107,6 +106,8 @@ int timer_init(int id);
  * Returns: 0 on success, not 0 on failure
  */
 int timer_exit(void);
+#endif
+
 /*---------------------------------------------------
  *
  * udelay:
@@ -123,6 +124,7 @@ void mdelay(unsigned int ms);
 
 void sdelay(unsigned int s);
 
+u32 get_timer(unsigned int base);
 
 /*---------------------------------------------------
  *
@@ -136,7 +138,8 @@ void sdelay(unsigned int s);
             ticks from system start based on tick_base.
  */
 
-u32 get_ticks(u32 tick_base);
+unsigned long long get_ticks(void);
+
 
 /*---------------------------------------------------
  *

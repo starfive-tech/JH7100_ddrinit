@@ -177,16 +177,7 @@ void orbit_boot(uint32_t OMC_APB_BASE_ADDR, uint32_t OMC_SECURE_APB_BASE_ADDR, u
 
         apb_write(PHY_APB_BASE_ADDR + (0 +2 << 2), 0x01); //set freq_change_ack
         tmp = apb_read(PHY_APB_BASE_ADDR + (0 +2 << 2)); //read freq_change_ack
-#if 0
-        if(count == 4)
-        {
-            tmp = apb_read(PHY_APB_BASE_ADDR + ((4096 + 1826) << 2));
-            printf("start phy %d = 0x%x\r\n", i,(u32)tmp);
-            udelay(100);
-            tmp = apb_read(PHY_APB_BASE_ADDR + ((4096 + 1826) << 2));
-            printf("post phy %d = 0x%x\r\n", i,(u32)tmp);
-        }
-#endif
+
         count++;
         //printf("count = 0x%x\r\n", count);
         while((tmp & 0x00000001) != 0x00000000) {
@@ -303,9 +294,13 @@ void orbit_boot(uint32_t OMC_APB_BASE_ADDR, uint32_t OMC_SECURE_APB_BASE_ADDR, u
     apb_write(OMC_APB_BASE_ADDR + 0xc, 0x00000002);
     apb_write(OMC_APB_BASE_ADDR + 0x4, 0x30030031);
     apb_write(OMC_APB_BASE_ADDR + 0xc, 0x00000002);
-    apb_write(OMC_APB_BASE_ADDR + 0x4, 0x300b0066);
+    apb_write(OMC_APB_BASE_ADDR + 0x4, 0x300b0036); //0x06->0x66
     apb_write(OMC_APB_BASE_ADDR + 0xc, 0x00000002);
-    apb_write(OMC_APB_BASE_ADDR + 0x4, 0x3016001e); //0x30160006
+    apb_write(OMC_APB_BASE_ADDR + 0x4, 0x3016001e); //0x06->0x1e
+    apb_write(OMC_APB_BASE_ADDR + 0xc, 0x00000002);
+    apb_write(OMC_APB_BASE_ADDR + 0x4, 0x300c0030); //vref(ca)
+    apb_write(OMC_APB_BASE_ADDR + 0xc, 0x00000002);
+    apb_write(OMC_APB_BASE_ADDR + 0x4, 0x300e0020); //vref(dq)
     apb_write(OMC_APB_BASE_ADDR + 0xc, 0x00000002);
     apb_write(OMC_APB_BASE_ADDR + 0x410, 0x00101010);
     apb_write(OMC_APB_BASE_ADDR + 0x420, 0x0c181006);

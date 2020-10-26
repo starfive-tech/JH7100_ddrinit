@@ -3,32 +3,33 @@
 #include <sys.h>
 #include <clkgen_ctrl_macro.h>
 #include <comdef.h>
+#include <ddr_define.h>
 void regconfig_pi_start(uint32_t OMC_APB_BASE_ADDR, uint32_t OMC_SECURE_APB_BASE_ADDR, uint32_t PHY_APB_BASE_ADDR, u32 ddr_num)
 {
     u32 tmp = 0;
     tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +89 <<2));//`DENALI_PHY_89_DATA
-    apb_write(PHY_APB_BASE_ADDR + (4096 +89 <<2), tmp&0xffffff00|0x00000051);
+    apb_write(PHY_APB_BASE_ADDR + (4096 +89 <<2), tmp&0xffffff00|0x00000051); //0x51->0x61
 
     //disable RDLVL VREF
     tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +78 <<2));//`DENALI_PHY_78_DATA
     apb_write(PHY_APB_BASE_ADDR + (4096 +78 <<2), tmp&0xfffffcff);
 
     tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +345 <<2));//`DENALI_PHY_345_DATA
-    apb_write(PHY_APB_BASE_ADDR + (4096 +345 <<2), tmp&0xffffff00|0x00000051);
+    apb_write(PHY_APB_BASE_ADDR + (4096 +345 <<2), tmp&0xffffff00|0x00000051);//0x51->0x61
 
     //disable RDLVL VREF
     tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +334 <<2));//`DENALI_PHY_334_DATA
     apb_write(PHY_APB_BASE_ADDR + (4096 +334 <<2), tmp&0xfffffcff);
 
     tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +601 <<2));//`DENALI_PHY_601_DATA
-    apb_write(PHY_APB_BASE_ADDR + (4096 +601 <<2), tmp&0xffffff00|0x00000051);
+    apb_write(PHY_APB_BASE_ADDR + (4096 +601 <<2), tmp&0xffffff00|0x00000051);//0x51->0x61
 
     //disable RDLVL VREF
     tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +590 <<2));//`DENALI_PHY_590_DATA
     apb_write(PHY_APB_BASE_ADDR + (4096 +590 <<2), tmp&0xfffffcff);
 
     tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +857 <<2));//`DENALI_PHY_857_DATA
-    apb_write(PHY_APB_BASE_ADDR + (4096 +857 <<2), tmp&0xffffff00|0x00000051);
+    apb_write(PHY_APB_BASE_ADDR + (4096 +857 <<2), tmp&0xffffff00|0x00000051);//0x51->0x61
 
     //disable RDLVL VREF
     tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +846 <<2));//`DENALI_PHY_846_DATA
@@ -253,23 +254,23 @@ void regconfig_pi_start(uint32_t OMC_APB_BASE_ADDR, uint32_t OMC_SECURE_APB_BASE
 
 	//PI_MR11_DATA_F1_X
 	tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +281 <<2)); //DENALI_PI_281_DATA
-	apb_write(PHY_APB_BASE_ADDR + (2048 +281 <<2), tmp|0x66000000); //DENALI_PI_281_DATA
+	apb_write(PHY_APB_BASE_ADDR + (2048 +281 <<2), tmp|0x36000000); //DENALI_PI_281_DATA
 	tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +305 <<2)); //DENALI_PI_313_DATA
-	apb_write(PHY_APB_BASE_ADDR + (2048 +305 <<2), tmp|0x66000000); //DENALI_PI_305_DATA
+	apb_write(PHY_APB_BASE_ADDR + (2048 +305 <<2), tmp|0x36000000); //DENALI_PI_305_DATA
 	tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +329 <<2)); //DENALI_PI_337_DATA
-	apb_write(PHY_APB_BASE_ADDR + (2048 +329 <<2), tmp|0x66000000); //DENALI_PI_329_DATA
+	apb_write(PHY_APB_BASE_ADDR + (2048 +329 <<2), tmp|0x36000000); //DENALI_PI_329_DATA
 	tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +353 <<2)); //DENALI_PI_361_DATA
-	apb_write(PHY_APB_BASE_ADDR + (2048 +353 <<2), tmp|0x66000000); //DENALI_PI_353_DATA
+	apb_write(PHY_APB_BASE_ADDR + (2048 +353 <<2), tmp|0x36000000); //DENALI_PI_353_DATA
 
 	//PI_MR11_DATA_F2_X
 	tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +289 <<2)); //DENALI_PI_289_DATA
-	apb_write(PHY_APB_BASE_ADDR + (2048 +289 <<2), tmp|0x66000000); //DENALI_PI_289_DATA
+	apb_write(PHY_APB_BASE_ADDR + (2048 +289 <<2), tmp|0x36000000); //DENALI_PI_289_DATA
 	tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +313 <<2)); //DENALI_PI_313_DATA
-	apb_write(PHY_APB_BASE_ADDR + (2048 +313 <<2), tmp|0x66000000); //DENALI_PI_313_DATA
+	apb_write(PHY_APB_BASE_ADDR + (2048 +313 <<2), tmp|0x36000000); //DENALI_PI_313_DATA
 	tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +337 <<2)); //DENALI_PI_337_DATA
-	apb_write(PHY_APB_BASE_ADDR + (2048 +337 <<2), tmp|0x66000000); //DENALI_PI_337_DATA
+	apb_write(PHY_APB_BASE_ADDR + (2048 +337 <<2), tmp|0x36000000); //DENALI_PI_337_DATA
 	tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +361 <<2)); //DENALI_PI_361_DATA
-	apb_write(PHY_APB_BASE_ADDR + (2048 +361 <<2), tmp|0x66000000); //DENALI_PI_361_DATA
+	apb_write(PHY_APB_BASE_ADDR + (2048 +361 <<2), tmp|0x36000000); //DENALI_PI_361_DATA
 #if 1
 	//PI_MR22_DATA_F1_X
 	tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +282 <<2)); //DENALI_PI_282_DATA
@@ -395,92 +396,6 @@ void regconfig_pi_start(uint32_t OMC_APB_BASE_ADDR, uint32_t OMC_SECURE_APB_BASE
     tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +1550 <<2));//`DENALI_PHY_1550_DATA
     apb_write(PHY_APB_BASE_ADDR + (4096 +1550 <<2), tmp&0xfcffffff|0x02000000);
 
-#if 0
-    //tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +1918 <<2));//`DENALI_PHY_1918_DATA
-    apb_write(PHY_APB_BASE_ADDR + (4096 +1918 <<2), 0x1c088);
-
-    //PHY_PAD_VREF_CTRL_AC
-    tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +1896 <<2)); //DENALI_PI_1896_DATA
-    apb_write(PHY_APB_BASE_ADDR + (4096 +1896 <<2), tmp&0xfffffc00|0x03d5); //DENALI_PHY_1896_DATA
-
-    //PHY_PAD_VREF_CTRL_DQ_x:10'h11f->10'h3d5
-    tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +91 <<2)); //DENALI_PI_91_DATA
-    apb_write(PHY_APB_BASE_ADDR + (4096 +91 <<2), tmp&0xfc00ffff|0x03d50000); //DENALI_PHY_91_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +347 <<2)); //DENALI_PI_347_DATA
-    apb_write(PHY_APB_BASE_ADDR + (4096 +347 <<2), tmp&0xfc00ffff|0x03d50000); //DENALI_PHY_347_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +603 <<2)); //DENALI_PI_603_DATA
-    apb_write(PHY_APB_BASE_ADDR + (4096 +603 <<2), tmp&0xfc00ffff|0x03d50000); //DENALI_PHY_603_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +859 <<2)); //DENALI_PI_859_DATA
-    apb_write(PHY_APB_BASE_ADDR + (4096 +859 <<2), tmp&0xfc00ffff|0x03d50000); //DENALI_PHY_859_DATA
-
-    //PHY_PAD_FDBK_DRIVE
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1912 <<2), 0x1c088); //DENALI_PHY_1912_DATA
-    //PHY_PAD_FDBK_DRIVE2
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1913 <<2), 0x88); //DENALI_PHY_1913_DATA
-    //PHY_PAD_DATA_DRIVE
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1914 <<2), 0x1c0); //DENALI_PHY_1914_DATA
-    //PHY_PAD_DQS_DRIVE
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1915 <<2), 0x1c0); //DENALI_PHY_1915_DATA
-    //PHY_PAD_ADDR_DRIVE
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1916 <<2), 0x1c000); //DENALI_PHY_1916_DATA
-    //PHY_PAD_CLK_DRIVE
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1918 <<2), 0x1c000); //DENALI_PHY_1918_DATA
-    //PHY_PAD_CLK_DRIVE2
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1919 <<2), 0x0); //DENALI_PHY_1919_DATA
-    //PHY_PAD_CKE_DRIVE
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1922 <<2), 0x1c000); //DENALI_PHY_1922_DATA
-    //PHY_PAD_CKE_DRIVE2
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1923 <<2), 0x0); //DENALI_PHY_1923_DATA
-    //PHY_PAD_RST_DRIVE
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1924 <<2), 0x0); //DENALI_PHY_1924_DATA
-    //PHY_PAD_RST_DRIVE2
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1925 <<2), 0x0); //DENALI_PHY_1925_DATA
-    //PHY_PAD_CS_DRIVE
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1926 <<2), 0x0); //DENALI_PHY_1926_DATA
-    //PHY_PAD_CS_DRIVE2
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1927 <<2), 0x0); //DENALI_PHY_1927_DATA
-    //PHY_PAD_ODT_DRIVE
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1928 <<2), 0x0); //DENALI_PHY_1928_DATA
-
-    //PHY_DQ_TSEL_SELECT_X
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +76 <<2)); //DENALI_PI_76_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +76 <<2), tmp&0xff0000ff|0x00888800); //DENALI_PHY_76_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +332 <<2)); //DENALI_PI_332_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +332 <<2), tmp&0xff0000ff|0x00888800); //DENALI_PHY_332_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +588 <<2)); //DENALI_PHY_588_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +588 <<2), tmp&0xff0000ff|0x00888800); //DENALI_PHY_588_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +844 <<2)); //DENALI_PHY_844_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +844 <<2), tmp&0xff0000ff|0x00888800); //DENALI_PHY_844_DATA
-
-    //PHY_DQS_TSEL_SELECT_X
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +77 <<2)); //DENALI_PI_77_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +77 <<2), tmp&0xff0000ff|0x00888800); //DENALI_PHY_77_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +333 <<2)); //DENALI_PI_333_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +333 <<2), tmp&0xff0000ff|0x00888800); //DENALI_PHY_333_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +589 <<2)); //DENALI_PHY_589_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +589 <<2), tmp&0xff0000ff|0x00888800); //DENALI_PHY_589_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +845 <<2)); //DENALI_PHY_845_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +845 <<2), tmp&0xff0000ff|0x00888800); //DENALI_PHY_845_DATA
-
-    //PHY_ADR_TSEL_SELECT_X
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +1062 <<2)); //DENALI_PI_1062_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1062 <<2), tmp&0xffffff00|0x88); //DENALI_PHY_1062_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +1318 <<2)); //DENALI_PI_1318_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1318 <<2), tmp&0xffffff00|0x88); //DENALI_PHY_1318_DATA
-
-    tmp = apb_read(PHY_APB_BASE_ADDR + (2048 +1574 <<2)); //DENALI_PI_1574_DATA
-    apb_write(PHY_APB_BASE_ADDR + (2048 +1574 <<2), tmp&0xffffff00|0x88); //DENALI_PHY_1574_DATA
-#endif
 #if 1//0807
 //PHY_PAD_DSLICE_IO_CFG_x:0->7
 tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +83 <<2)); //DENALI_PHY_83_DATA
@@ -539,42 +454,41 @@ tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +859 <<2)); //DENALI_PHY_859_DATA
 apb_write(PHY_APB_BASE_ADDR + (4096 +859 <<2), tmp&0xfc00ffff|0x03d50000); //DENALI_PHY_859_DATA
 
 //PHY_PAD_FDBK_DRIVE:bit[7:0]:{ENSLICEP_DRV,ENSLICEN_DRV}
-apb_write(PHY_APB_BASE_ADDR + (4096 +1912 <<2), 0xcf3bf8c); //DENALI_PHY_1912_DATA //0x1c088
+apb_write(PHY_APB_BASE_ADDR + (4096 +1912 <<2), 0xcc3bfc7); //DENALI_PHY_1912_DATA //SPEED[23:22]=3, tx_pulldwn[21:20]=2'b00, MODE[17:15]=7, SLEWP[13:11]=7, SLEWN[10:8]=7
 //PHY_PAD_FDBK_DRIVE2:bit[7:0]:{ENSLICEP_ODT,ENSLICEN_ODT}
-apb_write(PHY_APB_BASE_ADDR + (4096 +1913 <<2), 0xf00c); //DENALI_PHY_1913_DATA //0x88
+apb_write(PHY_APB_BASE_ADDR + (4096 +1913 <<2), 0xff8f); //DENALI_PHY_1913_DATA //BOOSTP[15:12]=F, BOOSTN[11:18]=F
 //PHY_PAD_DATA_DRIVE
-apb_write(PHY_APB_BASE_ADDR + (4096 +1914 <<2), 0x33f07ff); //DENALI_PHY_1914_DATA //0x1c0
+apb_write(PHY_APB_BASE_ADDR + (4096 +1914 <<2), 0x33f07ff); //DENALI_PHY_1914_DATA //tx_pulldwn[21:20]=2'b11, SPEED[10:9]=3, MODE[8:6]=7, SLEWP[5:3]=7, SLEWN[2:0]=7
 //PHY_PAD_DQS_DRIVE
-apb_write(PHY_APB_BASE_ADDR + (4096 +1915 <<2), 0xc3c37ff); //DENALI_PHY_1915_DATA //0x1c0
+apb_write(PHY_APB_BASE_ADDR + (4096 +1915 <<2), 0xc3c37ff); //DENALI_PHY_1915_DATA //tx_pulldwn[13:12]=2'b11, SPEED[10:9]=3, MODE[8:6]=7, SLEWP[5:3]=7, SLEWN[2:0]=7
 //PHY_PAD_ADDR_DRIVE
-apb_write(PHY_APB_BASE_ADDR + (4096 +1916 <<2), 0x1f87ff70); //DENALI_PHY_1916_DATA //0x1c000
+apb_write(PHY_APB_BASE_ADDR + (4096 +1916 <<2), 0x1fffff70); //DENALI_PHY_1916_DATA //BOOSTP[26:23]=F, BOOSTN[22:19]=F, SLEWP[13:11]=7, SLEWN[10:8]=7, tx_pulldwn[6:5]=2'b11
 //PHY_PAD_ADDR_DRIVE2
-apb_write(PHY_APB_BASE_ADDR + (4096 +1917 <<2), 0x230010); //DENALI_PHY_1917_DATA //0x220000
+apb_write(PHY_APB_BASE_ADDR + (4096 +1917 <<2), 0x230010); //DENALI_PHY_1917_DATA
 //PHY_PAD_CLK_DRIVE
-apb_write(PHY_APB_BASE_ADDR + (4096 +1918 <<2), 0x3ff7fff7); //DENALI_PHY_1918_DATA //0x1c088 // 0xbc wave good
+apb_write(PHY_APB_BASE_ADDR + (4096 +1918 <<2), 0x3fc7fff7); //DENALI_PHY_1918_DATA //BOOSTP[29:26]=F, BOOSTN[25:22]=F, tx_pulldwn[21:20]=2'b00, SPEED[18:17]=3, MODE[16:14]=7, SLEWP[13:11]=7, SLEWN[10:8]=7
 //PHY_PAD_CLK_DRIVE2
 apb_write(PHY_APB_BASE_ADDR + (4096 +1919 <<2), 0xe10); //DENALI_PHY_1919_DATA
 //PHY_PAD_ERR_DRIVE
-apb_write(PHY_APB_BASE_ADDR + (4096 +1920 <<2), 0x1f87ff8c); //DENALI_PHY_1920_DATA
+apb_write(PHY_APB_BASE_ADDR + (4096 +1920 <<2), 0x1fffffff); //DENALI_PHY_1920_DATA //tx_pulldwn[28:27]=2'b11, BOOSTP[26:23]=F, BOOSTN[22:19]=F, SPEED[18:17]=3, MODE[16:14]=7, SLEWP[13:11]=7, SLEWN[10:8]=7
 //PHY_PAD_ERR_DRIVE2
 apb_write(PHY_APB_BASE_ADDR + (4096 +1921 <<2), 0x188411); //DENALI_PHY_1921_DATA
 //PHY_PAD_CKE_DRIVE
-apb_write(PHY_APB_BASE_ADDR + (4096 +1922 <<2), 0x6bfff); //DENALI_PHY_1922_DATA //0x1c088
+apb_write(PHY_APB_BASE_ADDR + (4096 +1922 <<2), 0x1fffffff); //DENALI_PHY_1922_DATA //tx_pulldwn[28:27]=2'b11, BOOSTP[26:23]=F, BOOSTN[22:19]=F, SPEED[18:17]=3, MODE[16:14]=7, SLEWP[13:11]=7, SLEWN[10:8]=7
 //PHY_PAD_CKE_DRIVE2
 apb_write(PHY_APB_BASE_ADDR + (4096 +1923 <<2), 0x180400); //DENALI_PHY_1923_DATA
 //PHY_PAD_RST_DRIVE
-apb_write(PHY_APB_BASE_ADDR + (4096 +1924 <<2), 0x6bfff); //DENALI_PHY_1924_DATA //0x1c088
+apb_write(PHY_APB_BASE_ADDR + (4096 +1924 <<2), 0x1fffffff); //DENALI_PHY_1924_DATA //tx_pulldwn[28:27]=2'b11, BOOSTP[26:23]=F, BOOSTN[22:19]=F, SPEED[18:17]=3, MODE[16:14]=7, SLEWP[13:11]=7, SLEWN[10:8]=7
 //PHY_PAD_RST_DRIVE2
 apb_write(PHY_APB_BASE_ADDR + (4096 +1925 <<2), 0x180400); //DENALI_PHY_1925_DATA
 //PHY_PAD_CS_DRIVE
-apb_write(PHY_APB_BASE_ADDR + (4096 +1926 <<2), 0x1f87ffff); //DENALI_PHY_1926_DATA //0x1c088
+apb_write(PHY_APB_BASE_ADDR + (4096 +1926 <<2), 0x1fffffcf); //DENALI_PHY_1926_DATA //tx_pulldwn[28:27]=2'b11, BOOSTP[26:23]=F, BOOSTN[22:19]=F, SPEED[18:17]=3, MODE[16:14]=7, SLEWP[13:11]=7, SLEWN[10:8]=7
 //PHY_PAD_CS_DRIVE2
 apb_write(PHY_APB_BASE_ADDR + (4096 +1927 <<2), 0x188400); //DENALI_PHY_1927_DATA
 //PHY_PAD_ODT_DRIVE
-apb_write(PHY_APB_BASE_ADDR + (4096 +1928 <<2), 0x1f87df8c); //DENALI_PHY_1928_DATA //0x1c088
+apb_write(PHY_APB_BASE_ADDR + (4096 +1928 <<2), 0x1fffffff); //DENALI_PHY_1928_DATA //tx_pulldwn[28:27]=2'b11, BOOSTP[26:23]=F, BOOSTN[22:19]=F, SPEED[18:17]=3, MODE[16:14]=7, SLEWP[13:11]=7, SLEWN[10:8]=7
 //PHY_CAL_CLK_SELECT_0,PHY_PAD_ODT_DRIVE2:1->4
-tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +1929 <<2)); //DENALI_PHY_1929_DATA
-apb_write(PHY_APB_BASE_ADDR + (4096 +1929 <<2), 0x4188411); //DENALI_PHY_1929_DATA
+apb_write(PHY_APB_BASE_ADDR + (4096 +1929 <<2), 0x4188411); //DENALI_PHY_1929_DATA //PHY_CAL_CLK_SELECT_0[26:24]
 
 //PHY_PAD_FDBK_TERM
 apb_write(PHY_APB_BASE_ADDR + (4096 +1837 <<2), 0x24410); //DENALI_PHY_1837_DATA
@@ -587,60 +501,60 @@ apb_write(PHY_APB_BASE_ADDR + (4096 +1842 <<2), 0x2ffff); //DENALI_PHY_1842_DATA
 if(ddr_num == 0) //ddr0
 {
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +76 <<2)); //DENALI_PHY_76_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +76 <<2), tmp&0xff0000ff|0x00f48f00); //DENALI_PHY_76_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +76 <<2), tmp&0xff0000ff|0x00ff8f00); //DENALI_PHY_76_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +332 <<2)); //DENALI_PHY_332_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +332 <<2), tmp&0xff0000ff|0x00f47c00); //DENALI_PHY_332_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +332 <<2), tmp&0xff0000ff|0x00ff7c00); //DENALI_PHY_332_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +588 <<2)); //DENALI_PHY_588_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +588 <<2), tmp&0xff0000ff|0x00f48f00); //DENALI_PHY_588_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +588 <<2), tmp&0xff0000ff|0x00ff8f00); //DENALI_PHY_588_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +844 <<2)); //DENALI_PHY_844_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +844 <<2), tmp&0xff0000ff|0x00f48f00); //DENALI_PHY_844_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +844 <<2), tmp&0xff0000ff|0x00ff8f00); //DENALI_PHY_844_DATA
 }
 else //ddr1
 {
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +76 <<2)); //DENALI_PHY_76_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +76 <<2), tmp&0xff0000ff|0x00f44f00); //DENALI_PHY_76_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +76 <<2), tmp&0xff0000ff|0x00ff4f00); //DENALI_PHY_76_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +332 <<2)); //DENALI_PHY_332_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +332 <<2), tmp&0xff0000ff|0x00f47c00); //DENALI_PHY_332_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +332 <<2), tmp&0xff0000ff|0x00ff7c00); //DENALI_PHY_332_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +588 <<2)); //DENALI_PHY_588_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +588 <<2), tmp&0xff0000ff|0x00f44f00); //DENALI_PHY_588_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +588 <<2), tmp&0xff0000ff|0x00ff4f00); //DENALI_PHY_588_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +844 <<2)); //DENALI_PHY_844_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +844 <<2), tmp&0xff0000ff|0x00f47c00); //DENALI_PHY_844_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +844 <<2), tmp&0xff0000ff|0x00ff7c00); //DENALI_PHY_844_DATA
 }
 
 //PHY_DQS_TSEL_SELECT_X  bit[15:8]={ENSLICEP_DRV,ENSLICEN_DRV}:tsel_wr_select  bit[7:0]={ENSLICEP_ODT,ENSLICEN_ODT}:tsel_rd_select
 if(ddr_num == 0) //ddr0
 {
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +77 <<2)); //DENALI_PHY_77_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +77 <<2), tmp&0xffff0000|0xb77c); //DENALI_PHY_77_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +77 <<2), tmp&0xffff0000|0xc47c); //DENALI_PHY_77_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +333 <<2)); //DENALI_PHY_333_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +333 <<2), tmp&0xffff0000|0xb78f); //DENALI_PHY_333_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +333 <<2), tmp&0xffff0000|0xc48f); //DENALI_PHY_333_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +589 <<2)); //DENALI_PHY_589_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +589 <<2), tmp&0xffff0000|0xb77c); //DENALI_PHY_589_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +589 <<2), tmp&0xffff0000|0xc47c); //DENALI_PHY_589_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +845 <<2)); //DENALI_PHY_845_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +845 <<2), tmp&0xffff0000|0xb77c); //DENALI_PHY_845_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +845 <<2), tmp&0xffff0000|0xc47c); //DENALI_PHY_845_DATA
 }
 else //ddr1
 {
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +77 <<2)); //DENALI_PHY_77_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +77 <<2), tmp&0xffff0000|0xc78f); //DENALI_PHY_77_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +77 <<2), tmp&0xffff0000|0xc48f); //DENALI_PHY_77_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +333 <<2)); //DENALI_PHY_333_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +333 <<2), tmp&0xffff0000|0xc78f); //DENALI_PHY_333_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +333 <<2), tmp&0xffff0000|0xc48f); //DENALI_PHY_333_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +589 <<2)); //DENALI_PHY_589_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +589 <<2), tmp&0xffff0000|0xc78f); //DENALI_PHY_589_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +589 <<2), tmp&0xffff0000|0xc48f); //DENALI_PHY_589_DATA
 
   tmp = apb_read(PHY_APB_BASE_ADDR + (4096 +845 <<2)); //DENALI_PHY_845_DATA
-  apb_write(PHY_APB_BASE_ADDR + (4096 +845 <<2), tmp&0xffff0000|0xc78f); //DENALI_PHY_845_DATA
+  apb_write(PHY_APB_BASE_ADDR + (4096 +845 <<2), tmp&0xffff0000|0xc48f); //DENALI_PHY_845_DATA
 }
 
 //PHY_ADR_TSEL_SELECT_X:bit[7:0]:{ENSLICEP_ODT/DRV,PENSLICEN_ODT/DRV}

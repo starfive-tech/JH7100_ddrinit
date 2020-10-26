@@ -17,7 +17,7 @@ LINKER_SCRIPT := ddrinit.lds
 MAP_FILE := ddrinit.map
 
 #DDR_SPEED 1:1600. 2:2133 3:2666 4 :3200
-DDR_SPEED = 25   
+DDR_SPEED = DDR2133
 
 
 INCLUDE_DIR = -I. -I../boot\
@@ -28,9 +28,19 @@ INCLUDE_DIR = -I. -I../boot\
 			-I../uart \
 			-I../timer \
 			-I../sdio\
-			-I../gpt\
-			-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_1066_cl20_bl16
+			-I../gpt
 
+ifeq ($(strip $(DDR_SPEED)),DDR1600)
+INCLUDE_DIR +=-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_800_cl14_bl16
+else ifeq ($(strip $(DDR_SPEED)),DDR2133)
+INCLUDE_DIR +=-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_1066_cl20_bl16
+else ifeq ($(strip $(DDR_SPEED)),DDR2666)
+INCLUDE_DIR +=-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_1333_cl24_bl16
+else ifeq ($(strip $(DDR_SPEED)),DDR2666)
+INCLUDE_DIR +=-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_1600_cl28_bl16
+else
+$(error DDR_SPEED $(DDR_SPEED) illegal!)
+endif
 
 # compiler options
 RISCV_ARCH := rv64imafdc
@@ -70,20 +80,19 @@ OBJECTLIST=../boot/start.o \
 		../gpt/gpt.o \
 		../ddrphy_cfg/regconfig.h.sim_PHY.o \
 		../ddrphy_cfg/regconfig.h.sim_PI.o \
-		../ddrphy_cfg/lpddr4_1600_cl28_bl16/regconfig_pi_start.o \
-		../ddrc_cfg/lpddr4_1066_cl20_bl16/orbit_boot_1066.o 
-		
-ifeq ($(DDR_SPEED), 1)
-OBJECTLIST +=../ddrc_cfg/orbit_boot_800.o
-else ifeq ($(DDR_SPEED), 2)
-OBJECTLIST +=../ddrc_cfg/orbit_boot_1066.o
-else ifeq ($(DDR_SPEED), 3)
-OBJECTLIST +=../ddrc_cfg/orbit_boot_1333.o
-else ifeq ($(DDR_SPEED), 4)
-OBJECTLIST +=../ddrc_cfg/orbit_boot_1600.o
+		../ddrphy_cfg/lpddr4_1600_cl28_bl16/regconfig_pi_start.o 
+
+ifeq ($(strip $(DDR_SPEED)),DDR1600)
+OBJECTLIST +=../ddrc_cfg/lpddr4_800_cl14_bl16/orbit_boot_800.o
+else ifeq ($(strip $(DDR_SPEED)),DDR2133)
+OBJECTLIST +=../ddrc_cfg/lpddr4_1066_cl20_bl16/orbit_boot_1066.o
+else ifeq ($(strip $(DDR_SPEED)),DDR2666)
+OBJECTLIST +=../ddrc_cfg/lpddr4_1333_cl24_bl16/orbit_boot_1333.o
+else ifeq ($(strip $(DDR_SPEED)),DDR2666)
+OBJECTLIST +=../ddrc_cfg/lpddr4_1600_cl28_bl16/orbit_boot_1600.o
+else
+$(error DDR_SPEED $(DDR_SPEED) illegal!)
 endif
-
-
 
 all:$(TARGET).elf $(TARGET).bin $(TARGET).asm
 
@@ -106,16 +115,6 @@ $(TARGET).elf:$(OBJECTLIST)
 	$(CC) $(CFLAGS) $(CCASFLAGS) -c $< -o $@
 
 %.o: %.c 
-ifeq ($(DDR_SPEED), 1)
-	echo #
-else ifeq ($(DDR_SPEED), 2)
-	echo ##
-else ifeq ($(DDR_SPEED), 3)
-	echo ###
-else ifeq ($(DDR_SPEED), 4)
-	echo ####
-endif
-	echo ddr_speed $(DDR_SPEED)
 	$(CC) $(CFLAGS) -o $@ -c $<
 	
 .PHONY: clean

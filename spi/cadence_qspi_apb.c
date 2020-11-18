@@ -443,7 +443,19 @@ void cadence_qspi_apb_config_baudrate_div(void * reg_base,
 	cadence_qspi_apb_controller_disable(reg_base);
 	reg = readl((u32)reg_base + CQSPI_REG_CONFIG);
 	reg &= ~(CQSPI_REG_CONFIG_BAUD_MASK << CQSPI_REG_CONFIG_BAUD_LSB);
+	
+	/*
+	 * The baud_div field in the config reg is 4 bits, and the ref clock is
+	 * divided by 2 * (baud_div + 1). Round up the divider to ensure the
+	 * SPI clock rate is less than or equal to the requested clock rate.
+	 */
+	div = DIV_ROUND_UP(ref_clk_hz, sclk_hz * 2) - 1;
 
+	/* ensure the baud rate doesn't exceed the max value */
+	if (div > CQSPI_REG_CONFIG_BAUD_MASK)
+		div = CQSPI_REG_CONFIG_BAUD_MASK;
+
+#if 0
 	div = ref_clk_hz / sclk_hz;
 
 	if (div > 32)
@@ -460,9 +472,10 @@ void cadence_qspi_apb_config_baudrate_div(void * reg_base,
 		else
 			div = (div / 2) - 1;
 	}
+#endif 
 
-	//uart_printf("%s: ref_clk %dHz sclk %dHz Div 0x%x\n", __func__,
-	      //ref_clk_hz, sclk_hz, div);
+//	printk("%s: ref_clk %dHz sclk %dHz Div 0x%x actual:%dHz\n", __func__,
+//	      ref_clk_hz, sclk_hz, div,ref_clk_hz / (2 * (div + 1)));
 
 	div = (div & CQSPI_REG_CONFIG_BAUD_MASK) << CQSPI_REG_CONFIG_BAUD_LSB;
 	reg |= div;

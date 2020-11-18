@@ -216,7 +216,7 @@ void boot_from_chiplink(void)
 	if(1 == abort)
 	{
 		cadence_qspi_init(0, mode);
-		spi_flash = spi_flash_probe(0, 0, 50000000, 0, (u32)SPI_DATAMODE_8);
+		spi_flash = spi_flash_probe(0, 0, 31250000, 0, (u32)SPI_DATAMODE_8);
 		
 		printk("***************************************************\r\n");
 		printk("***************VIC	DDR INIT BOOT ********************\r\n");
@@ -282,8 +282,7 @@ void boot_from_spi(int mode)
 	u32 val;
 
     cadence_qspi_init(0, mode);
-	spi_flash = spi_flash_probe(0, 0, 50000000, 0, (u32)SPI_DATAMODE_8);
-
+	spi_flash = spi_flash_probe(0, 0, 31250000, 0, (u32)SPI_DATAMODE_8);
 	/*load uboot*/
 	load_data(spi_flash,DEFAULT_UBOOT_ADDR,DEFAULT_UBOOT_OFFSET,mode);
 }

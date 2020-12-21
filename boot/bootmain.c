@@ -307,10 +307,23 @@ static int init_ddr(void)
   _SWITCH_CLOCK_clk_dla_root_SOURCE_clk_osc_sys_;
   //SCFG_PLL [31:24] [23:16] [15:8]   [7:4] [3]    [2]   [1] [0]
   //          OD      BWADJ  CLKFDIV  CLKR  bypass infb  pd  rst
+#if defined(DDR_2133)
   MA_OUTW(syscon_sysmain_ctrl_SCFG_pll1_REG_ADDR,0x292905);//set reset
   udelay(10); //wait(500*(1/25M))
   MA_OUTW(syscon_sysmain_ctrl_SCFG_pll1_REG_ADDR,0x0292904);//clear reset
   udelay(10); //wait(500*(1/25M))
+#elif defined(DDR_2800)
+  MA_OUTW(syscon_sysmain_ctrl_SCFG_pll1_REG_ADDR,0x373705);//set reset
+  udelay(10); //wait(500*(1/25M))
+  MA_OUTW(syscon_sysmain_ctrl_SCFG_pll1_REG_ADDR,0x0373704);//clear reset
+  udelay(10); //wait(500*(1/25M))
+#elif defined(DDR_3200)
+  MA_OUTW(syscon_sysmain_ctrl_SCFG_pll1_REG_ADDR,0x3f3f05);//set reset
+  udelay(10); //wait(500*(1/25M))
+  MA_OUTW(syscon_sysmain_ctrl_SCFG_pll1_REG_ADDR,0x03f3f04);//clear reset
+  udelay(10); //wait(500*(1/25M))
+#endif
+
   _SWITCH_CLOCK_clk_dla_root_SOURCE_clk_pll1_out_;
   //_CLEAR_RESET_rstgen_rstn_ddrphy_apb_ //clear reset of ddrphy,unvalid
 
@@ -445,14 +458,20 @@ void BootMain(void)
 	int boot_mode = 0;
 	int ret=0;
 
-	gpio_init();
+//	gpio_init();
 	uart_init(3);
 
 	ret = init_ddr();
 	if(ret == 0)
 	{
 		_SET_SYSCON_REG_register68_SCFG_disable_u74_memaxi_remap(1);
-		printk("DDR clk 2133M,Version: %s\r\n",VERSION);
+#if defined(DDR_2133)
+		  printk("DDR clk 2133M,Version: %s\r\n",VERSION);
+#elif defined(DDR_2800)
+		  printk("DDR clk 2800M,Version: %s\r\n",VERSION);
+#elif defined(DDR_3200)
+		  printk("DDR clk 3200M,Version: %s\r\n",VERSION);
+#endif
 	}
 	else
 		printk("End init lpddr4, test ddr fail\r\n");

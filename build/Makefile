@@ -7,18 +7,17 @@ LD=${CROSSCOMPILE}ld
 OBJCOPY=${CROSSCOMPILE}objcopy
 OBJDUMP=${CROSSCOMPILE}objdump
 
+#DDR_SPEED 1:1600. 2:2133 3:2800 4 :3200
+DDR_SPEED = 3200
+
 SUFFIX=$(shell date +%y%m%d)
 GIT_VERSION=$(shell git show -s --pretty=format:%h)
 VERSION=$(SUFFIX)-$(GIT_VERSION)
 
-TARGET 	= ddrinit-$(SUFFIX)
+TARGET 	= ddrinit-$(DDR_SPEED)-$(SUFFIX)
 
 LINKER_SCRIPT := ddrinit.lds
 MAP_FILE := ddrinit.map
-
-#DDR_SPEED 1:1600. 2:2133 3:2666 4 :3200
-DDR_SPEED = DDR2133
-
 
 INCLUDE_DIR = -I. -I../boot\
 			-I../common\
@@ -30,13 +29,13 @@ INCLUDE_DIR = -I. -I../boot\
 			-I../sdio\
 			-I../gpt
 
-ifeq ($(strip $(DDR_SPEED)),DDR1600)
+ifeq ($(strip $(DDR_SPEED)),1600)
 INCLUDE_DIR +=-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_800_cl14_bl16
-else ifeq ($(strip $(DDR_SPEED)),DDR2133)
+else ifeq ($(strip $(DDR_SPEED)),2133)
 INCLUDE_DIR +=-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_1066_cl20_bl16
-else ifeq ($(strip $(DDR_SPEED)),DDR2666)
-INCLUDE_DIR +=-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_1333_cl24_bl16
-else ifeq ($(strip $(DDR_SPEED)),DDR2666)
+else ifeq ($(strip $(DDR_SPEED)),2800)
+INCLUDE_DIR +=-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_1600_cl28_bl16
+else ifeq ($(strip $(DDR_SPEED)),3200)
 INCLUDE_DIR +=-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_1600_cl28_bl16
 else
 $(error DDR_SPEED $(DDR_SPEED) illegal!)
@@ -79,17 +78,24 @@ OBJECTLIST=../boot/start.o \
 		../sdio/sdio.o \
 		../gpt/gpt.o \
 		../ddrphy_cfg/regconfig.h.sim_PHY.o \
-		../ddrphy_cfg/regconfig.h.sim_PI.o \
-		../ddrphy_cfg/lpddr4_1600_cl28_bl16/regconfig_pi_start.o 
+		../ddrphy_cfg/regconfig.h.sim_PI.o 
 
-ifeq ($(strip $(DDR_SPEED)),DDR1600)
+ifeq ($(strip $(DDR_SPEED)),1600)
 OBJECTLIST +=../ddrc_cfg/lpddr4_800_cl14_bl16/orbit_boot_800.o
-else ifeq ($(strip $(DDR_SPEED)),DDR2133)
+OBJECTLIST +=../ddrphy_cfg/lpddr4_1600_cl28_bl16/regconfig_pi_start.o
+CFLAGS +=-DDDR_1600
+else ifeq ($(strip $(DDR_SPEED)),2133)
 OBJECTLIST +=../ddrc_cfg/lpddr4_1066_cl20_bl16/orbit_boot_1066.o
-else ifeq ($(strip $(DDR_SPEED)),DDR2666)
+OBJECTLIST +=../ddrphy_cfg/lpddr4_1600_cl28_bl16/regconfig_pi_start.o
+CFLAGS +=-DDDR_2133
+else ifeq ($(strip $(DDR_SPEED)),2800)
 OBJECTLIST +=../ddrc_cfg/lpddr4_1333_cl24_bl16/orbit_boot_1333.o
-else ifeq ($(strip $(DDR_SPEED)),DDR2666)
+OBJECTLIST +=../ddrphy_cfg/lpddr4_1600_cl28_bl16/regconfig_pi_start_2800.o
+CFLAGS +=-DDDR_2800
+else ifeq ($(strip $(DDR_SPEED)),3200)
 OBJECTLIST +=../ddrc_cfg/lpddr4_1600_cl28_bl16/orbit_boot_1600.o
+OBJECTLIST +=../ddrphy_cfg/lpddr4_1600_cl28_bl16/regconfig_pi_start_3200.o
+CFLAGS +=-DDDR_3200
 else
 $(error DDR_SPEED $(DDR_SPEED) illegal!)
 endif

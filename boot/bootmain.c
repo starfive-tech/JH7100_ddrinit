@@ -26,6 +26,9 @@
 #include "gpt.h"
 #include "clkgen_ctrl_macro.h"
 #include "syscon_sysmain_ctrl_macro.h"
+#include "rstgen_ctrl_macro.h"
+
+#include "crc32.h"
 
 extern void boot_sdio_init(void);
 extern int boot_load_gpt_partition(void* dst, const gpt_guid* partition_type_guid);
@@ -56,7 +59,7 @@ void start2run32(unsigned int start)
  *mode:flash work mode
 */
 
-static int load_data(struct spi_flash* spi_flash,unsigned int des_addr,unsigned int page_offset,int mode)
+static int load_data(struct spi_flash* spi_flash,void *des_addr,unsigned int page_offset,int mode)
 {
 	u8 dataBuf[260];
 	u32 startPage,endPage;
@@ -88,11 +91,51 @@ static int load_data(struct spi_flash* spi_flash,unsigned int des_addr,unsigned 
 	/*copy the first page data*/
 	sys_memcpy(addr, &dataBuf[4], SPIBOOT_LOAD_ADDR_OFFSET);
 
+	//copy data from flash to des_addr, with crc check
+#if 1
+    uint32_t crc_org = 0, crc_ddr = 0;
+    uint32_t n_bytes_left = fileSize - SPIBOOT_LOAD_ADDR_OFFSET;
+    uint32_t once = 0;
+
+    crc32(dataBuf+4, SPIBOOT_LOAD_ADDR_OFFSET, &crc_org);
+    crc32(addr, SPIBOOT_LOAD_ADDR_OFFSET, &crc_ddr);
+
+    offset += pageSize;
+    addr += SPIBOOT_LOAD_ADDR_OFFSET;
+
+    /*read Remaining pages data*/
+    while (n_bytes_left) {
+        once = n_bytes_left > pageSize ? pageSize : n_bytes_left;
+        ret = spi_flash->read(spi_flash, offset, once, dataBuf, mode);
+        if(ret != 0)
+        {
+            printk("read 0x%x fail##\r\n", offset);
+            return -1;
+        }
+        sys_memcpy(addr, dataBuf, once);
+        crc32(dataBuf, once, &crc_org);
+        crc32(addr, once, &crc_ddr);
+
+        offset += once;
+        addr += once;
+        n_bytes_left -= once;
+    }
+
+    printk("crc flash: %08x, crc ddr: %08x\n", crc_org, crc_ddr);
+    if (crc_org != crc_ddr) {
+        printk("ERROR: crc check FAILED\n");
+        while (1) {
+            __asm__ ("wfi");
+        }
+    } else {
+        printk("crc check PASSED\n");
+    }
+#else
 	offset += pageSize;
 	addr += SPIBOOT_LOAD_ADDR_OFFSET;
-	/*read Remaining pages data*/
+
 	for(i=1; i<=endPage; i++)
-	{ 		
+	{
 		ret = spi_flash->read(spi_flash,offset,pageSize, addr, mode);
 		if(ret != 0)
         {
@@ -103,10 +146,12 @@ static int load_data(struct spi_flash* spi_flash,unsigned int des_addr,unsigned 
 		offset += pageSize;
 		addr +=pageSize;
 	}
+#endif
+
 	return 0;
 }
 
-int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,u32 load_addr,unsigned char mode)
+int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,u32 flash_size_limit, u32 load_addr,unsigned char mode)
 {
     int ret = 0;
     u32 offset = 0;
@@ -125,6 +170,10 @@ int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,u32 load_addr,unsign
 	if(ret <= 0)
 		return -1;
 
+	if ((u32)ret > flash_size_limit) {
+		printk("error: size %d exceeds the limit %d\n", ret, flash_size_limit);
+		return -1;
+	}
 	erase_block = (ret + blockSize - 1) / blockSize;
 	page_count = (ret + pageSize - 1) / pageSize;
 
@@ -169,13 +218,13 @@ static int updata_flash_code(struct spi_flash* spi_flash,unsigned int updata_num
     int ret = 0;
     switch (updata_num){
         case 0:
-            ret = updata_flash(spi_flash,FLASH_SECONDBOOT_START_ADDR,DEFAULT_SECONDBOOT_LOAD_ADDR,mode);
+            ret = updata_flash(spi_flash,FLASH_SECONDBOOT_START_ADDR,FLASH_SECONDBOOT_SIZE_LIMIT,DEFAULT_SECONDBOOT_LOAD_ADDR,mode);
             break;
         case 1:
-            ret = updata_flash(spi_flash,FLASH_DDRINIT_START_ADDR,DEFAULT_DDRINIT_LOAD_ADDR,mode);
+            ret = updata_flash(spi_flash,FLASH_DDRINIT_START_ADDR,FLASH_DDRINIT_SIZE_LIMIT,DEFAULT_DDRINIT_LOAD_ADDR,mode);
             break;
         case 2:
-            ret = updata_flash(spi_flash,FLASH_UBOOT_START_ADDR,DEFAULT_UBOOT_LOAD_ADDR,mode);
+            ret = updata_flash(spi_flash,FLASH_UBOOT_START_ADDR,FLASH_UBOOT_SIZE_LIMIT,DEFAULT_UBOOT_LOAD_ADDR,mode);
             break;
         default:
             break;
@@ -401,7 +450,7 @@ static int init_ddr(void)
     //`endif
   }
 
- #if 1   
+ #if 1
     //while(1)
     {
 
@@ -475,6 +524,19 @@ void BootMain(void)
 	}
 	else
 		printk("End init lpddr4, test ddr fail\r\n");
+
+#if (UBOOT_EXEC_AT_NBDLA_2M == 1)
+	printk("init nbdla 2M ram\r\n");
+	_SET_SYSCON_REG_register16_SCFG_nbdla_clkgating_en(1);
+	_ENABLE_CLOCK_clk_dla_axi_;
+	_ENABLE_CLOCK_clk_dlanoc_axi_;
+	_ENABLE_CLOCK_clk_dla_apb_;
+	_ENABLE_CLOCK_clk_dlaslv_axi_;
+	_CLEAR_RESET_rstgen_rstn_dla_axi_;
+	_CLEAR_RESET_rstgen_rstn_dlanoc_axi_;
+	_CLEAR_RESET_rstgen_rstn_dla_apb_;
+	_CLEAR_RESET_rstgen_rstn_dlaslv_axi_;
+#endif  /* UBOOT_EXEC_AT_NBDLA_2M */
 
 	boot_from_chiplink();
 	

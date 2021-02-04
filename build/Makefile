@@ -8,7 +8,7 @@ OBJCOPY=${CROSSCOMPILE}objcopy
 OBJDUMP=${CROSSCOMPILE}objdump
 
 #DDR_SPEED 1:1600. 2:2133 3:2800 4 :3200
-DDR_SPEED = 3200
+DDR_SPEED = 2133
 
 SUFFIX=$(shell date +%y%m%d)
 GIT_VERSION=$(shell git show -s --pretty=format:%h)
@@ -27,7 +27,8 @@ INCLUDE_DIR = -I. -I../boot\
 			-I../uart \
 			-I../timer \
 			-I../sdio\
-			-I../gpt
+			-I../gpt \
+			-I../crc32 \
 
 ifeq ($(strip $(DDR_SPEED)),1600)
 INCLUDE_DIR +=-I../ddrphy_cfg/memory/jedec_lpddr4_16gb_3200/regconfig_sim_800_cl14_bl16
@@ -78,7 +79,8 @@ OBJECTLIST=../boot/start.o \
 		../sdio/sdio.o \
 		../gpt/gpt.o \
 		../ddrphy_cfg/regconfig.h.sim_PHY.o \
-		../ddrphy_cfg/regconfig.h.sim_PI.o 
+		../ddrphy_cfg/regconfig.h.sim_PI.o \
+		../crc32/crc32.o \
 
 ifeq ($(strip $(DDR_SPEED)),1600)
 OBJECTLIST +=../ddrc_cfg/lpddr4_800_cl14_bl16/orbit_boot_800.o

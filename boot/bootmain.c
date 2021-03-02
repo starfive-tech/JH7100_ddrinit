@@ -232,6 +232,96 @@ static int updata_flash_code(struct spi_flash* spi_flash,unsigned int updata_num
     return ret;
 }
 
+static int prog_2ndboot(struct spi_flash *flash, int mode)
+{
+    updata_flash_code(flash, 0, mode);
+    return 0;
+}
+
+static int prog_ddrinit(struct spi_flash *flash, int mode)
+{
+    updata_flash_code(flash, 1, mode);
+    return 0;
+}
+
+static int prog_uboot(struct spi_flash *flash, int mode)
+{
+    updata_flash_code(flash, 2, mode);
+    return 0;
+}
+
+typedef struct
+{
+    const char *text;
+    int (*prog_op)(struct spi_flash *, int);
+} prog_menu_t;
+
+static int prog_menu(struct spi_flash *flash, int mode, const prog_menu_t *menu, int count)
+{
+    int i, sel;
+    char buff[32]={0};
+    char *str = NULL, *str_end = NULL;
+    const char *ROOT_MENU_KEY = "root@s5t";
+    
+    while (1) {
+        printk("\n");
+        for (i = 0; i < count; i++) {
+            printk("%d:%s\n", i, menu[i].text);
+        }
+        printk("%d:quit\n", count);
+        printk("select the function: ");
+        serial_gets(buff);
+        str = buff;
+        while (*str == '\n' || *str == ' ') {
+            //skip white
+            str++;
+        }
+
+        if (strcmp(str, ROOT_MENU_KEY) == 0) {
+            //request root menu
+            return 1;
+        }
+        sel = (int)strtol(str, &str_end, 10);
+        if (str == str_end || sel < 0 || sel > count) {
+            //invalid sel
+            continue;
+        }
+        if (sel == count) {
+            //quit
+            printk("\nquit\n");
+            return 0;
+        }
+        if (menu[sel].prog_op) {
+            menu[sel].prog_op(flash, mode);
+        }
+    }
+    return 0;
+}
+
+static void prog_flash(void)
+{
+    prog_menu_t user_menu[] = {
+        { "update uboot",           prog_uboot   },
+    };
+    prog_menu_t root_menu[] = {
+        { "update second boot",     prog_2ndboot },
+        { "update ddr init boot",   prog_ddrinit },
+        { "update uboot",           prog_uboot   },
+    };
+    struct spi_flash *flash = NULL;
+    unsigned char mode = 1;// or 4
+
+    cadence_qspi_init(0, mode);
+    flash = spi_flash_probe(0, 0, 31250000, 0, (u32)SPI_DATAMODE_8);
+
+    printk("\n***************************************************\n");
+    printk("*************** FLASH PROGRAMMING *****************\n");
+    printk("***************************************************\n");
+    if (prog_menu(flash, mode, &user_menu, sizeof(user_menu)/sizeof(user_menu[0]))) {
+        prog_menu(flash, mode, &root_menu, ARRAY_SIZE(root_menu));
+    }
+}
+
 void boot_from_chiplink(void)
 {
 	int bootdelay = 3;
@@ -264,6 +354,8 @@ void boot_from_chiplink(void)
 	
 	if(1 == abort)
 	{
+		prog_flash();
+#if 0
 		cadence_qspi_init(0, mode);
 		spi_flash = spi_flash_probe(0, 0, 31250000, 0, (u32)SPI_DATAMODE_8);
 		
@@ -303,6 +395,7 @@ again:
 			printk("updata success\r\n");
 
 		goto again;
+#endif
 	}
 }
 

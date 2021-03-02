@@ -177,15 +177,15 @@ int serial_getc()
 
 void serial_gets(char *pstr)
 {
-	unsigned char c;
-	unsigned char *pstrorg;
+	char c;
+	char *pstrorg;
 	
-	pstrorg = (unsigned char *) pstr;
+	pstrorg = (char *) pstr;
 
-	while ((c = serial_getc()) != '\r')
+	while ((c = (char)serial_getc()) != '\r')
 	{
 		if (c == '\b'){
-			if ((int) *pstrorg < (int) *pstr){
+			if (pstrorg < pstr){
 				rlSendString("\b \b");
 				pstr--;
 			}

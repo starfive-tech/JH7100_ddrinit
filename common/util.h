@@ -1,25 +1,23 @@
-/*====*====*====*====*====*====*====*====*====*====*====*====*====*====*====**
-*		Copyright (c) 2009 by UVCHIP Inc. All rights reserved.
-*	This source code contains confidential, trade secret material of
-*	UVCHIP Inc. Any attempt or participation in deciphering, decoding,
-*	reverse engineering or in any way altering the source code is strictly
-*	prohibited.
-*
-*	Branch/Tag Name:	$Name$
-*	FileName: 		$RCSfile$
-*	Description:  
-*			
-*		This file is used to build test drive firmware for fpga drive ip modele
-*
-*	$Author$ 
-*	$Date$
-*	$Revision$
-*   
-**====*====*====*====*====*====*====*====*====*====*====*====*====*====*====**
-* Revisions History
-*
-*	$Log$
-**====*====*====*====*====*====*====*====*====*====*====*====*====*====*====*/
+/**
+  ******************************************************************************
+  * @file  util.h
+  * @author  StarFive Technology
+  * @version  V1.0
+  * @date  07/24/2020
+  * @brief
+  ******************************************************************************
+  * @copy
+  *
+  * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+  * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
+  * TIME. AS A RESULT, STARFIVE SHALL NOT BE HELD LIABLE FOR ANY
+  * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
+  * FROM THE CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
+  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  *
+  *  COPYRIGHT 2020 Shanghai StarFive Technology Co., Ltd.
+  */
+
 
 #ifndef UTIL_H_
 #define UTIL_H_

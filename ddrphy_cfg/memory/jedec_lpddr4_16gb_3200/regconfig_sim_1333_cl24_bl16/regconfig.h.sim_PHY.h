@@ -1,54 +1,23 @@
 
-/* ****************************************************************
- *        CADENCE                    Copyright (c) 2001-2018      *
- *                                   Cadence Design Systems, Inc. *
- *                                   All rights reserved.         *
- ******************************************************************
- *  The values calculated from this script are meant to be        *
- *  representative programmings.   The values may not reflect the *
- *  actual required programming for production use.   Please      *
- *  closely review all programmed values for technical accuracy   *
- *  before use in production parts.                               *
- ******************************************************************
- *                                                                 
- *   Module:         regconfig.h
- *   Documentation:  Register programming header file
- *
- ******************************************************************
- ******************************************************************
- * WARNING:  This file was automatically generated.  Manual
- * editing may result in undetermined behavior.
- ******************************************************************
- ******************************************************************/
-// REL: sifive.shanghai.n1-VIC_DDR__20180206
-
-
-//`timescale 10ps/10ps
-
-// ********************************************************************
-// Option: IP    : IP Mode                       = PHY
-// Option: BL    : Burst Length                  = 16
-// Option: CL    : CAS Latency                   = 24
-// Option: MHZ   : Simulation MHz                = 1333
-// Option: AP    : Auto Precharge Mode     (0/1) = 0
-// Option: DLLBP : DLL Bypass Mode         (0/1) = 0
-// Option: HALF  : Half-Memory Support     (0/1) = 0
-// Option: RDIMM : Registered Dimm Support (0/1) = 0
-// Option: AL    : Additive Latency              = 0
-// Option: PREAM : Preamble Support    (0/1/2/3) = 0
-// Option: BOF   : Burst On the Fly        (0/1) = 0
-// Option: WLS   : Write Latency Set       (0/1) = 0
-// Option: TCK   : Simulation period in ns       = 
-// Option: WRDBIEN : Write DBI Enable       (0/1) = 0
-// Option: RDDBIEN : Read DBI Enable       (0/1) = 0
-// Option: RDPSTMBLE : RD Postamble En      (0/1) = 0
-// Option: WRPSTMBLE : WR Postamble En      (0/1) = 0
-// Option: CRC : CRC En      (0/1) = 0
-// Option: SOMA  : Memory-SOMA file(s)           = /proj/iprel/sifive.shanghai.n1-VIC_DDR/sifive.shanghai.n1-VIC_DDR__20180201/mcip/mem/sifive.shanghai.n1-VIC_DDR/memory/jedec_lpddr4_16gb_3200/memory.xml.sim
-// Option: PL    : CA Parity Latency              = -1
-// ********************************************************************
-// Memory: jedec_lpddr4_16gb_3200
-// ********************************************************************
+/**
+  ******************************************************************************
+  * @file  regconfig.h.sim_PHY.h
+  * @author  StarFive Technology
+  * @version  V1.0
+  * @date  07/20/2020
+  * @brief
+  ******************************************************************************
+  * @copy
+  *
+  * THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+  * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
+  * TIME. AS A RESULT, STARFIVE SHALL NOT BE HELD LIABLE FOR ANY
+  * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
+  * FROM THE CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
+  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  *
+  *  COPYRIGHT 2020 Shanghai StarFive Technology Co., Ltd.
+  */
 
 
 #define               DENALI_PHY_00_DATA 0b00000000000000000000010011110000 // PHY_IO_PAD_DELAY_TIMING_BYPASS_0:RW:16:4:=0x00 PHY_CLK_WR_BYPASS_SLAVE_DELAY_0:RW:0:11:=0x04f0

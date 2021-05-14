@@ -602,6 +602,7 @@ void BootMain(void)
 
 //	gpio_init();
 	uart_init(3);
+	printk("\r\n");
 
 	ret = init_ddr();
 	if(ret == 0)

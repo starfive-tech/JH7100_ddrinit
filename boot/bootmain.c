@@ -121,14 +121,14 @@ static int load_data(struct spi_flash* spi_flash,void *des_addr,unsigned int pag
         n_bytes_left -= once;
     }
 
-    printk("crc flash: %08x, crc ddr: %08x\n", crc_org, crc_ddr);
+    printk("crc flash: %08x, crc ddr: %08x\r\n", crc_org, crc_ddr);
     if (crc_org != crc_ddr) {
-        printk("ERROR: crc check FAILED\n");
+        printk("ERROR: crc check FAILED\r\n");
         while (1) {
             __asm__ ("wfi");
         }
     } else {
-        printk("crc check PASSED\n");
+        printk("crc check PASSED\r\n");
     }
 #else
 	offset += pageSize;
@@ -171,7 +171,7 @@ int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,u32 flash_size_limit
 		return -1;
 
 	if ((u32)ret > flash_size_limit) {
-		printk("error: size %d exceeds the limit %d\n", ret, flash_size_limit);
+		printk("error: size %d exceeds the limit %d\r\n", ret, flash_size_limit);
 		return -1;
 	}
 	erase_block = (ret + blockSize - 1) / blockSize;
@@ -199,7 +199,7 @@ int updata_flash(struct spi_flash* spi_flash,u32 flash_addr,u32 flash_size_limit
 		
 		printk(".");
 		if(index%64 == 0)
-			printk("\n");
+			printk("\r\n");
 		
 		if(ret < 0)
 		{
@@ -264,11 +264,11 @@ static int prog_menu(struct spi_flash *flash, int mode, const prog_menu_t *menu,
     const char *ROOT_MENU_KEY = "root@s5t";
     
     while (1) {
-        printk("\n");
+        printk("\r\n");
         for (i = 0; i < count; i++) {
-            printk("%d:%s\n", i, menu[i].text);
+            printk("%d:%s\r\n", i, menu[i].text);
         }
-        printk("%d:quit\n", count);
+        printk("%d:quit\r\n", count);
         printk("select the function: ");
         serial_gets(buff);
         str = buff;
@@ -288,7 +288,7 @@ static int prog_menu(struct spi_flash *flash, int mode, const prog_menu_t *menu,
         }
         if (sel == count) {
             //quit
-            printk("\nquit\n");
+            printk("\r\nquit\r\n");
             return 0;
         }
         if (menu[sel].prog_op) {
@@ -314,9 +314,9 @@ static void prog_flash(void)
     cadence_qspi_init(0, mode);
     flash = spi_flash_probe(0, 0, 31250000, 0, (u32)SPI_DATAMODE_8);
 
-    printk("\n***************************************************\n");
-    printk("*************** FLASH PROGRAMMING *****************\n");
-    printk("***************************************************\n");
+    printk("\r\n***************************************************\r\n");
+    printk("*************** FLASH PROGRAMMING *****************\r\n");
+    printk("***************************************************\r\n");
     if (prog_menu(flash, mode, &user_menu, sizeof(user_menu)/sizeof(user_menu[0]))) {
         prog_menu(flash, mode, &root_menu, ARRAY_SIZE(root_menu));
     }
@@ -553,7 +553,7 @@ static int init_ddr(void)
             tmp = readl(0x1000000000 + i *4);
             if(tmp != 0xa5a5a5a5)
             {
-                printk("error addr %d = 0x%x\n", i *4, tmp);
+                printk("error addr %d = 0x%x\r\n", i *4, tmp);
 				fail_flag = -1;
             }
 
@@ -561,7 +561,7 @@ static int init_ddr(void)
             tmp = readl(0x1000000000 + i *4);
             if(tmp != 0x5a5a5a5a)
             {
-                printk("error addr %d = 0x%x\n", i *4, tmp);
+                printk("error addr %d = 0x%x\r\n", i *4, tmp);
 				fail_flag = -1;
             }
 
@@ -570,7 +570,7 @@ static int init_ddr(void)
             tmp = readl(0x1000000000 + i *4);
             if(tmp != 0x00000000)
             {
-                printk("error addr %d = 0x%x\n", i *4, tmp);
+                printk("error addr %d = 0x%x\r\n", i *4, tmp);
 				fail_flag = -1;
             }
 
@@ -580,7 +580,7 @@ static int init_ddr(void)
             tmp = readl(0x1000000000 + i *4);
             if(tmp != 0xffffffff)
             {
-                printk("error addr %d = 0x%x\n", i *4, tmp);
+                printk("error addr %d = 0x%x\r\n", i *4, tmp);
 				fail_flag = -1;
             }
 
@@ -654,6 +654,6 @@ void BootMain(void)
 	 	default:
 	 		break;		 
 	}
-	printk("\nbootloader.\n");
+	printk("\r\nbootloader.\r\n");
 	writel(0x1, 0x2000004); 
 }

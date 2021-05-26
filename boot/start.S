@@ -108,6 +108,8 @@ _start:
 	j .LwaitOtherHart
 
 .enter_uboot:
+	# Synchronize the instruction and data caches.
+	fence.i
 	li t0, DEFAULT_UBOOT_ADDR
 	csrr a0, mhartid
 	la a1, 0

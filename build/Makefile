@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (c) 2020 StarFiveTech, Inc
 
 # compiler tool chain

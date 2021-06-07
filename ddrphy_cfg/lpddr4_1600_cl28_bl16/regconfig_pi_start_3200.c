@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 /**
   ******************************************************************************
   * @file  regconfig_pi_start_3200.c

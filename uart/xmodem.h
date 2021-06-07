@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 /*=====================================================
 Copyright (c) 2020 by StarFiveTech Incorporated. All Rights Reserved.
 FileName: xmodem.h

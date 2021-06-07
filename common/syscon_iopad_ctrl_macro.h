@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-or-later */
 /**
   ******************************************************************************
   * @file  syscon_iopad_ctrl_macro.h

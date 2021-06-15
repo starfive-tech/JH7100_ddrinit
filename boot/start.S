@@ -64,9 +64,9 @@ _start:
 	la t2, _bss_end
 	bgeu t1, t2, 4f
 3:
-  sd   x0, 0(t1)
-  addi t1, t1, 8
-  blt  t1, t2, 3b
+	sd   x0, 0(t1)
+	addi t1, t1, 8
+	blt  t1, t2, 3b
 4:
 	/*only hart 0*/
 	call BootMain

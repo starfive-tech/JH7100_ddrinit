@@ -128,4 +128,4 @@ $(TARGET).elf:$(OBJECTLIST)
 	
 .PHONY: clean
 clean:
-	rm -f $(OBJECTLIST) $(TARGET).bin *.asm
+	rm -f $(OBJECTLIST) $(TARGET).bin *.asm *.elf *.out $(MAP_FILE)

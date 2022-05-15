@@ -2,11 +2,11 @@
 # Copyright (c) 2020 StarFiveTech, Inc
 
 # compiler tool chain
-CROSSCOMPILE?=riscv64-unknown-elf-
-CC=${CROSSCOMPILE}gcc
-LD=${CROSSCOMPILE}ld
-OBJCOPY=${CROSSCOMPILE}objcopy
-OBJDUMP=${CROSSCOMPILE}objdump
+CROSS_COMPILE?=riscv64-unknown-elf-
+CC=${CROSS_COMPILE}gcc
+LD=${CROSS_COMPILE}ld
+OBJCOPY=${CROSS_COMPILE}objcopy
+OBJDUMP=${CROSS_COMPILE}objdump
 
 #DDR_SPEED 1:1600. 2:2133 3:2800 4 :3200
 DDR_SPEED = 2133

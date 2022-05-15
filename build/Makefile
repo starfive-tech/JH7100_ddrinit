@@ -52,6 +52,7 @@ CFLAGS += -march=$(RISCV_ARCH)
 CFLAGS += -mabi=$(RISCV_ABI)
 CFLAGS += -mcmodel=medany
 CFLAGS += $(INCLUDE_DIR)
+CFLAGS += -specs=nano.specs
 CCASFLAGS= -mcmodel=medany -mexplicit-relocs	
 					
 LDFLAGS = -march=$(RISCV_ARCH) -mabi=$(RISCV_ABI)-T $(LINKER_SCRIPT) -nostartfiles --specs=nano.specs -Wl,-Map,$(MAP_FILE)
